@@ -1,12 +1,36 @@
 #!/bin/bash
 
+# Function to display loading animation
+loading_animation() {
+    local message="$1"
+    local dots=3
+    local delay=0.5  # Delay in seconds
+
+    echo -n "$message"
+    while true; do
+        for ((i = 1; i <= dots; i++)); do
+            echo -n "."
+            sleep $delay
+        done
+        echo -ne "\r$message"
+    done
+}
+
+# Function to stop the loading animation
+stop_loading_animation() {
+    local pid=$1
+    kill "$pid" 2>/dev/null
+    wait "$pid" 2>/dev/null
+}
+
 # Function to run commands and display status messages
 install_and_report() {
     local app_name=$1
     local install_command=$2
     local log_file=$3
-    
-    echo "Starting installation of $app_name..."
+
+    loading_animation "Starting installation of $app_name..." &
+    loading_pid=$!
     
     {
         echo "Installing $app_name..."
@@ -17,10 +41,11 @@ install_and_report() {
             echo "$app_name installation failed." >&2
         fi
     } >> "$log_file" 2>&1
-
+    stop_loading_animation $loading_pid
+    echo
     echo "$app_name installation process is complete."
+   
 }
-
 # Log file for installation outputs
 log_file="install_log.txt"
 > "$log_file"
