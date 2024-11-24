@@ -1,54 +1,58 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Function to display loading animation
-# loading_animation() {
-#     local message="$1"
-#     local dots=3
-#     local delay=0.5  # Delay in seconds
-
-#     echo -n "$message"
-#     while true; do
-#         for ((i = 1; i <= dots; i++)); do
-#             echo -n "."
-#             sleep $delay
-#         done
-#         echo -ne "\r$message"
-#     done
-# }
-
-# Function to display loading animation
-loading_animation() {
+# Function to display percentage completion progress
+loading_percentage() {
     local message="$1"
-    local dots=3
-    local delay=0.5  # Delay in seconds
+    local total_steps=$2
+    local current_step=0
+    local last_percentage=0
+    local progress_bar_length=50  # Progress bar length in characters
 
     echo -n "$message"
-    while true; do
-        for ((i = 1; i <= dots; i++)); do
-            echo -n "."
-            sleep $delay
-        done
-        echo -ne "\r$message"
+    echo
+
+    while [ $current_step -le $total_steps ]; do
+        # Calculate percentage
+        local percentage=$(( 100 * current_step / total_steps ))
+
+        # Print progress bar only if percentage has changed
+        if [ $percentage -gt $last_percentage ]; then
+            # Clear the line first
+            echo -ne "\r Progress : "
+            # Calculate the number of characters to represent the progress
+            local progress_length=$(( percentage * progress_bar_length / 100 ))
+            local remaining_length=$(( progress_bar_length - progress_length ))
+            local progress=$(printf "%-${progress_length}s" "#" | tr " " "#")
+            local remaining=$(printf "%-${remaining_length}s" " " | tr " " "-")
+
+            # Print the updated progress bar
+            echo -ne "[${progress}${remaining}] ${percentage}%"
+            last_percentage=$percentage
+        fi
+
+        # Simulate some work being done (replace this with actual task progress)
+        sleep 0.1  # Sleep to simulate the process running
+        current_step=$((current_step + 1))
     done
+
+    echo "Installation Complete ."
+
+    # Final completion
 }
 
-# Function to stop the loading animation
-stop_loading_animation() {
-    local pid=$1
-    kill "$pid" 2>/dev/null
-    wait "$pid" 2>/dev/null
-}
 
-# Function to run commands and display status messages
+# Function to run commands and display status messages with loading percentage
 install_and_report() {
     local app_name=$1
     local install_command=$2
-    local log_file=$3
+    local total_steps=$3
+    local log_file=$4
 
-    loading_animation "Starting installation of $app_name..." &
-    loading_pid=$!
-    
+    # Start the loading percentage progress in the background
+    loading_percentage "$app_name installation in progress..." $total_steps &
+    loading_pid=$!                                                                                                                                                                                               
     {
+        # Run the installation command
         echo "Installing $app_name..."
         eval "$install_command"
         if [ $? -eq 0 ]; then
@@ -57,11 +61,13 @@ install_and_report() {
             echo "$app_name installation failed." >&2
         fi
     } >> "$log_file" 2>&1
-    stop_loading_animation $loading_pid
+
+    # Wait for loading percentage to finish
+    wait $loading_pid
     echo
     echo "$app_name installation process is complete."
-   
 }
+
 # Log file for installation outputs
 log_file="install_log.txt"
 > "$log_file"
