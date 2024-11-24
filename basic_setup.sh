@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Check if the script is run as root (sudo) or not
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script needs to be run as root (use sudo)."
+    exit 1
+fi
+
 # Function to display percentage completion progress
 loading_percentage() {
     local message="$1"
@@ -8,8 +14,8 @@ loading_percentage() {
     local last_percentage=0
     local progress_bar_length=50  # Progress bar length in characters
 
-    echo -n "$message"
-    echo
+    echo -n "$message"  # Print message once
+    echo  # Newline for the message
 
     while [ $current_step -le $total_steps ]; do
         # Calculate percentage
@@ -17,8 +23,9 @@ loading_percentage() {
 
         # Print progress bar only if percentage has changed
         if [ $percentage -gt $last_percentage ]; then
-            # Clear the line first
-            echo -ne "\r Progress : "
+            # Clear the line first by moving the cursor back to the beginning
+            echo -ne "\rProgress : "
+
             # Calculate the number of characters to represent the progress
             local progress_length=$(( percentage * progress_bar_length / 100 ))
             local remaining_length=$(( progress_bar_length - progress_length ))
@@ -34,23 +41,20 @@ loading_percentage() {
         sleep 0.1  # Sleep to simulate the process running
         current_step=$((current_step + 1))
     done
-
-    echo "Installation Complete ."
-
-    # Final completion
+    echo " "
+    echo " "
+    echo "Installation Complete."
 }
-
 
 # Function to run commands and display status messages with loading percentage
 install_and_report() {
     local app_name=$1
     local install_command=$2
     local total_steps=$3
-    local log_file=$4
-
-    # Start the loading percentage progress in the background
+    local log_file=$4                                                                                                                                                                                                                   # Start the loading percentage progress in the background
     loading_percentage "$app_name installation in progress..." $total_steps &
-    loading_pid=$!                                                                                                                                                                                               
+    loading_pid=$!
+
     {
         # Run the installation command
         echo "Installing $app_name..."
@@ -70,24 +74,22 @@ install_and_report() {
 
 # Log file for installation outputs
 log_file="install_log.txt"
-> "$log_file"
+> "$log_file"  # Ensure the log file exists and is empty at the start
 
 # System updates
 echo "--------------------------- UPDATING OS ----------------------------"
 install_and_report "System Updates" "
     sudo apt-get update -y &&
     sudo apt-get upgrade -y
-" "$log_file"
-
+" 10 "$log_file"  # Provide a number for total_steps, not the log file
 
 echo "----------------- INSTALLING APT BASED PACKAGES ---------------------"
 # Install APT packages
-install_and_report "APT Packages" "sudo apt-get install -y neofetch zsh" "$log_file"
-
+install_and_report "APT Packages" "sudo apt-get install -y neofetch zsh" 5 "$log_file"  # Example of a smaller number
 
 echo "---------- INSTALLING VERSION MANAGERS : NODE , PYTHON ---------------"
 # Install NVM
-install_and_report "NVM" "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash" "$log_file"
+install_and_report "NVM" "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash" 10 "$log_file"
 
 # Install Miniconda
 install_and_report "Miniconda" "
@@ -97,12 +99,11 @@ install_and_report "Miniconda" "
     rm ~/miniconda3/miniconda.sh &&
     ~/miniconda3/bin/conda init bash &&
     ~/miniconda3/bin/conda init zsh
-" "$log_file"
+" 20 "$log_file"  # Adjust this as needed
 
 echo "-------------------- INSTALLING CODE EDITORS XD -----------------------"
-
 # Install ZED Editor
-install_and_report "ZED Editor" "curl -f https://zed.dev/install.sh | sh" "$log_file"
+install_and_report "ZED Editor" "curl -f https://zed.dev/install.sh | sh" 5 "$log_file"
 
 # Install Visual Studio Code
 install_and_report "Visual Studio Code" "
@@ -111,11 +112,9 @@ install_and_report "Visual Studio Code" "
     sudo sh -c 'echo \"deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main\" > /etc/apt/sources.list.d/vscode.list' &&
     sudo apt-get update &&
     sudo apt-get install -y code
-" "$log_file"
-
+" 10 "$log_file"
 
 echo "---------------------- INSTALLING WORKING ENVs --------------------------"
-
 # Install Docker CLI
 install_and_report "Docker CLI" "
     sudo apt-get update &&
@@ -129,7 +128,7 @@ install_and_report "Docker CLI" "
     sudo groupadd docker &&
     sudo usermod -aG docker $USER &&
     newgrp docker
-" "$log_file"
+" 15 "$log_file"  # Adjust the number for Docker
 
 # Install Kubeadm
 install_and_report "Kubeadm" "
@@ -144,7 +143,7 @@ install_and_report "Kubeadm" "
     curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb &&
     sudo dpkg -i minikube_latest_amd64.deb &&
     rm minikube_latest_amd64.deb
-" "$log_file"
+" 15 "$log_file"  # Adjust the number for Kubeadm
 
 # Update .bashrc and .zshrc
 echo "---------- UPDATING .BASHRC AND .ZSHRC ---------------"
