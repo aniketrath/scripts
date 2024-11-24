@@ -50,9 +50,6 @@ loading_percentage() {
 
     # Ensure the cursor moves to the next line before printing completion
     echo -e "\rProgress : [##################################################] 100%"  # Ensure the bar reaches 100%
-    sleep 0.5  # Sleep before printing the completion message
-    echo  # Newline to avoid overlap
-    echo -e "${GREEN}Installation Complete.${RESET}"  # Print the completion message in green
 }
 
 # Function to run commands and display status messages with loading percentage
@@ -83,7 +80,9 @@ install_and_report() {
 
     # Wait for the progress bar to finish
     wait $loading_pid
-    echo "$app_name installation process is complete."
+    sleep 0.5  # Sleep before printing the completion message
+    echo  # Newline to avoid overlap
+    echo -e "${GREEN}Installation Complete.${RESET}"  # Print the completion message in green
 }
 
 # Log file for installation outputs
