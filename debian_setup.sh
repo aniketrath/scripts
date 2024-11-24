@@ -6,6 +6,11 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+# Define color codes
+RED='\033[31m'
+GREEN='\033[32m'
+RESET='\033[0m'
+
 # Function to display percentage completion progress
 loading_percentage() {
     local message="$1"
@@ -14,7 +19,8 @@ loading_percentage() {
     local last_percentage=0
     local progress_bar_length=50  # Progress bar length in characters
 
-    echo -n "$message"  # Print message once
+    # Print the application name in green
+    echo -e "${GREEN}$message${RESET}"  # Application name in green
     echo  # Newline for the message
 
     while [ $current_step -le $total_steps ]; do
@@ -32,8 +38,8 @@ loading_percentage() {
             local progress=$(printf "%-${progress_length}s" "#" | tr " " "#")
             local remaining=$(printf "%-${remaining_length}s" " " | tr " " "-")
 
-            # Print the updated progress bar
-            echo -ne "[${progress}${remaining}] ${percentage}%"
+            # Print the updated progress bar in red
+            echo -ne "${RED}[${progress}${remaining}] ${percentage}%${RESET}"
             last_percentage=$percentage
         fi
 
@@ -41,9 +47,12 @@ loading_percentage() {
         sleep 0.1  # Sleep to simulate the process running
         current_step=$((current_step + 1))
     done
-    echo " "
-    echo " "
-    echo "Installation Complete."
+
+    # Ensure the cursor moves to the next line before printing completion
+    echo -e "\rProgress : [##################################################] 100%"  # Ensure the bar reaches 100%
+    sleep 0.5  # Sleep before printing the completion message
+    echo  # Newline to avoid overlap
+    echo -e "${GREEN}Installation Complete.${RESET}"  # Print the completion message in green
 }
 
 # Function to run commands and display status messages with loading percentage
@@ -51,7 +60,12 @@ install_and_report() {
     local app_name=$1
     local install_command=$2
     local total_steps=$3
-    local log_file=$4                                                                                                                                                                                                                   # Start the loading percentage progress in the background
+    local log_file=$4
+
+    # Log the start of the installation with a timestamp
+    echo "$(date +'%Y-%m-%d %H:%M:%S') - Installing $app_name..." >> "$log_file"
+    
+    # Start the loading percentage in the background
     loading_percentage "$app_name installation in progress..." $total_steps &
     loading_pid=$!
 
@@ -60,15 +74,15 @@ install_and_report() {
         echo "Installing $app_name..."
         eval "$install_command"
         if [ $? -eq 0 ]; then
-            echo "$app_name installation completed successfully."
+            echo "$(date +'%Y-%m-%d %H:%M:%S') - $app_name installation completed successfully." >> "$log_file"
         else
-            echo "$app_name installation failed." >&2
+            echo "$(date +'%Y-%m-%d %H:%M:%S') - $app_name installation failed." >&2
+            echo "$(date +'%Y-%m-%d %H:%M:%S') - $app_name installation failed." >> "$log_file"
         fi
     } >> "$log_file" 2>&1
 
-    # Wait for loading percentage to finish
+    # Wait for the progress bar to finish
     wait $loading_pid
-    echo
     echo "$app_name installation process is complete."
 }
 
@@ -149,7 +163,7 @@ install_and_report "Kubeadm" "
 echo "---------- UPDATING .BASHRC AND .ZSHRC ---------------"
 ALIASES=$(cat << 'EOF'
 
-# USER CREATED ALIASES :
+# USER CREATED ALIASES : 
 
 alias kubectl="minikube kubectl --"
 alias appupdate="sudo apt-get update -y"
@@ -175,16 +189,17 @@ else
 fi
 
 # Source .bashrc and .zshrc to apply changes
-echo "RELOADING SHELLS---------"
+echo "RELOADING ~/.bashrc for the user"
 source ~/.bashrc
+
+echo "SHELLS ~/.zshrc for the user"
 source ~/.zshrc
-echo "SHELLS RELOADED---------"
 
-# Notify user
-echo "All installations are complete. Check '$log_file' for details."
-cat << 'EOF'
+# Notify user in green text for emphasis
+echo -e "\033[32mAll installations are complete. Check '$log_file' for details.\033[0m"
 
-# THE FOLLOWING ALIASES HAVE BEEN GENERATED FOR EASIER USE :  :
+cat << 'EOF' | tee >(echo -e "\033[32m")  # Ensure this part is colored green
+# THE FOLLOWING ALIASES HAVE BEEN GENERATED FOR EASIER USE :
 
 alias kubectl                                  "minikube kubectl --"
 alias appupdate                                "sudo apt-get update -y"
