@@ -1,6 +1,22 @@
 #!/bin/bash
 
 # Function to display loading animation
+# loading_animation() {
+#     local message="$1"
+#     local dots=3
+#     local delay=0.5  # Delay in seconds
+
+#     echo -n "$message"
+#     while true; do
+#         for ((i = 1; i <= dots; i++)); do
+#             echo -n "."
+#             sleep $delay
+#         done
+#         echo -ne "\r$message"
+#     done
+# }
+
+# Function to display loading animation
 loading_animation() {
     local message="$1"
     local dots=3
