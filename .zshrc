@@ -20,6 +20,7 @@ if [ ! -d "$ZINIT_HOME" ]; then
 fi
 
 # Source/Load zinit
+PS1='[\u@\h \W]\$ '
 source "${ZINIT_HOME}/zinit.zsh"
 
 # Add in Powerlevel10k
@@ -76,8 +77,10 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
 # Aliases
-alias ls='ls --color'
 alias c='clear'
+alias grep='grep --color=auto'
+alias ls='eza'
+alias ll='ls -alh'
 
 # Shell integrations
 eval "$(fzf --zsh)"
