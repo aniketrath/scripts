@@ -126,6 +126,8 @@
 	pkgs.zsh
 	pkgs.eza
 	pkgs.bat
+        pkgs.fzf
+        pkgs.zoxide
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
