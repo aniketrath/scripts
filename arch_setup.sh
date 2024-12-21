@@ -42,11 +42,32 @@ loading_percentage() {
     echo -e "\rProgress : [##################################################] 100%"
 }
 
+# Function to check if a package is installed using pacman -Q
+is_package_installed() {
+    local package_name=$1
+    pacman -Q $package_name &> /dev/null
+    return $?
+}
+
+# Function to check if a command is available
+is_command_installed() {
+    local command_name=$1
+    command -v $command_name &> /dev/null
+    return $?
+}
+
 install_and_report() {
     local app_name=$1
     local install_command=$2
     local total_steps=$3
     local log_file=$4
+    local check_command=$5
+
+    # Check if the tool/command is already installed
+    if is_command_installed "$check_command"; then
+        echo -e "${GREEN}$app_name is already installed.${RESET}"
+        return
+    fi
 
     echo "$(date +'%Y-%m-%d %H:%M:%S') - Installing $app_name..." >> "$log_file"
     loading_percentage "$app_name installation in progress..." $total_steps &
@@ -73,7 +94,7 @@ log_file="install_log.txt"
 > "$log_file"
 
 echo "--------------------------- UPDATING SYSTEM ----------------------------"
-install_and_report "System Updates" "pacman -Syu --noconfirm" 10 "$log_file"
+install_and_report "System Updates" "sudo pacman -Syu --noconfirm" 10 "$log_file" "base"
 
 echo "---------------- INSTALLING PACKAGES ------------------"
 cat << 'EOF' | tee >(echo -e "\033[32m")
@@ -85,11 +106,15 @@ cat << 'EOF' | tee >(echo -e "\033[32m")
 -> Wget
 EOF
 
-install_and_report "Basic Utilities" "pacman -S --noconfirm neofetch zsh git curl wget" 5 "$log_file"
+# Install each package separately using pacman and sudo
+install_and_report "Neofetch" "sudo pacman -S --noconfirm neofetch" 1 "$log_file" "neofetch"
+install_and_report "Zsh" "sudo pacman -S --noconfirm zsh" 1 "$log_file" "zsh"
+install_and_report "Git" "sudo pacman -S --noconfirm git" 1 "$log_file" "git"
+install_and_report "Curl" "sudo pacman -S --noconfirm curl" 1 "$log_file" "curl"
+install_and_report "Wget" "sudo pacman -S --noconfirm wget" 1 "$log_file" "wget"
 
 echo "----------- INSTALLING VERSION MANAGERS: NODE, PYTHON -----------"
-install_and_report "NVM" "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash" 10 "$log_file"
-
+install_and_report "NVM" "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash" 10 "$log_file" "nvm"
 install_and_report "Miniconda" "
     mkdir -p ~/miniconda3 &&
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh &&
@@ -97,30 +122,29 @@ install_and_report "Miniconda" "
     rm ~/miniconda3/miniconda.sh &&
     ~/miniconda3/bin/conda init bash &&
     ~/miniconda3/bin/conda init zsh
-" 20 "$log_file"
+" 20 "$log_file" "conda"
 
 echo "------------------ INSTALLING CODE EDITORS --------------------"
-install_and_report "ZED Editor" "curl -f https://zed.dev/install.sh | sh" 5 "$log_file"
-
+install_and_report "ZED Editor" "curl -f https://zed.dev/install.sh | sh" 5 "$log_file" "zed"
 install_and_report "Visual Studio Code" "
-    pacman -S --noconfirm code
-" 10 "$log_file"
+    sudo pacman -S --noconfirm code
+" 10 "$log_file" "code"
 
 echo "------------------- INSTALLING DOCKER -------------------"
 install_and_report "Docker CLI" "
-    pacman -S --noconfirm docker &&
+    sudo pacman -S --noconfirm docker &&
     systemctl enable docker &&
     systemctl start docker &&
     groupadd docker &&
     usermod -aG docker $USER &&
     newgrp docker
-" 15 "$log_file"
+" 15 "$log_file" "docker"
 
 echo "------------------ INSTALLING KUBEADM -------------------"
 install_and_report "Kubeadm" "
-    pacman -S --noconfirm kubectl kubeadm kubelet &&
+    sudo pacman -S --noconfirm kubectl kubeadm kubelet &&
     systemctl enable --now kubelet
-" 15 "$log_file"
+" 15 "$log_file" "kubectl"
 
 echo "----------- UPDATING SHELL CONFIGS -----------"
 ALIASES=$(cat << 'EOF'
@@ -135,13 +159,6 @@ alias sysremove="sudo pacman -Rns --noconfirm"
 EOF
 )
 
-if ! grep -q '^alias kubectl' ~/.bashrc; then
-  echo "$ALIASES" >> ~/.bashrc
-  echo "Aliases added to .bashrc"
-else
-  echo "All Aliases are up to date in ~/.bashrc"
-fi
-
 if ! grep -q '^alias kubectl' ~/.zshrc; then
   echo "$ALIASES" >> ~/.zshrc
   echo "Aliases added to .zshrc"
@@ -149,16 +166,33 @@ else
   echo "All Aliases are up to date in .zshrc"
 fi
 
-source ~/.bashrc
+echo -e "\033[32mAll installations are complete. Check '$log_file' for details.\033[0m"
+
+cat << 'EOF' | tee >(echo -e "${RED}")  # Ensure this part is colored green
+Please change your shell and reload using the command
+
+chsh /usr/bin/zsh
 source ~/.zshrc
 
-echo -e "\033[32mAll installations are complete. Check '$log_file' for details.\033[0m"
-cat << 'EOF' | tee >(echo -e "\033[32m")
-# GENERATED ALIASES:
+EOF
 
-alias kubectl="minikube kubectl --"
-alias sysupdate="sudo pacman -Syu"
-alias sysupgrade="sudo pacman -Syu"
-alias sysinstall="sudo pacman -S --noconfirm"
-alias sysremove="sudo pacman -Rns --noconfirm"
+cat << 'EOF' | tee >(echo -e "\033[32m")  # Ensure this part is colored green
+# THE FOLLOWING ALIASES HAVE BEEN GENERATED FOR EASIER USE :
+
+alias kubectl                                  "minikube kubectl --"
+alias sysupdate                                "sudo pacman -Syu"
+alias sysupgrade                               "sudo pacman -Syu"
+alias sysinstall                               "sudo pacman -S --noconfirm"
+alias sysremove                                "sudo pacman -Rns --noconfirm"
+------------------------------------------------------------------------------------
+COMMANDS TO RUN POST SCRIPT :
+
+nvm install --lts                               Install the latest LTS version
+nvm use --lts                                   Use the latest LTS version
+conda create --name env_base python=3.10        Create Base Env. with v=3.10
+conda config --set auto_activate_base false     Prevent default conda env activation
+
+-------------------------------------------------------------------------------------
+MOREOVER, TO TRY OHMYZSH PLEASE RUN :
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 EOF
