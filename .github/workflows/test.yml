@@ -29,8 +29,8 @@ jobs:
             su - github
       - name: Run Arch Setup Script
         run: |
-          chmod +700 ./arch_setup.sh
-          sudo ./arch_setup.sh
+          chmod +700 ./linux_installer.sh
+          sudo ./linux_installer.sh
         shell: bash
 
   test-debian:
@@ -53,8 +53,8 @@ jobs:
             su - github
       - name: Run Debian Setup Script
         run: |
-          chmod +700 ./debian_setup.sh
-          sudo ./debian_setup.sh
+          chmod +700 ./linux_installer.sh
+          sudo ./linux_installer.sh
         shell: bash
 
   test-rocky:
@@ -67,7 +67,7 @@ jobs:
       - name: Rocky Linux Container
         uses: addnab/docker-run-action@v3
         with:
-          image: rockylinux:latest  # Use Rocky Linux as the distro
+          image: rockylinux/rockylinux:latest  # Use Rocky Linux as the distro
           options: --privileged
           run: |
             yum update -y && yum install -y sudo
@@ -77,8 +77,8 @@ jobs:
             su - github
       - name: Run Rocky Linux Setup Script
         run: |
-          chmod +700 ./rocky_setup.sh
-          sudo ./rocky_setup.sh
+          chmod +700 ./linux_installer.sh
+          sudo ./linux_installer.sh
         shell: bash
 
   test-fedora:
@@ -101,6 +101,6 @@ jobs:
             su - github
       - name: Run Fedora Setup Script
         run: |
-          chmod +700 ./fedora_setup.sh
-          sudo ./fedora_setup.sh
+          chmod +700 ./linux_installer.sh
+          sudo ./linux_installer.sh
         shell: bash
