@@ -27,15 +27,8 @@ install_docker() {
     # Extract Docker binaries
     tar xzvf /tmp/docker-${DOCKER_VERSION}.tgz -C /usr/local/bin --strip-components=1
 
-    # Download containerd binary
-    curl -fsSL https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/containerd-${CONTAINERD_VERSION}-linux-amd64.tar.gz -o /tmp/containerd-${CONTAINERD_VERSION}.tar.gz
-
-    # Extract containerd binaries
-    tar xzvf /tmp/containerd-${CONTAINERD_VERSION}.tar.gz -C /usr/local/bin --strip-components=1
-
     # Cleanup temporary files
     rm /tmp/docker-${DOCKER_VERSION}.tgz
-    rm /tmp/containerd-${CONTAINERD_VERSION}.tar.gz
 
     # Enable and start Docker service
     systemctl enable docker
