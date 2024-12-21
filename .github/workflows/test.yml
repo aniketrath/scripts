@@ -30,7 +30,7 @@ jobs:
       - name: Run Arch Setup Script
         run: |
           chmod +700 ./linux_installer.sh
-          sudo ./linux_installer.sh
+          sudo ./linux_installer.sh all
         shell: bash
 
   test-debian:
@@ -54,7 +54,7 @@ jobs:
       - name: Run Debian Setup Script
         run: |
           chmod +700 ./linux_installer.sh
-          sudo ./linux_installer.sh
+          sudo ./linux_installer.sh all
         shell: bash
 
   test-rocky:
@@ -78,7 +78,7 @@ jobs:
       - name: Run Rocky Linux Setup Script
         run: |
           chmod +700 ./linux_installer.sh
-          sudo ./linux_installer.sh
+          sudo ./linux_installer.sh all
         shell: bash
 
   test-fedora:
@@ -98,9 +98,8 @@ jobs:
             useradd -m github
             echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
             chmod 0440 /etc/sudoers.d/github
-            su - github
       - name: Run Fedora Setup Script
         run: |
           chmod +700 ./linux_installer.sh
-          sudo ./linux_installer.sh
+          sudo ./linux_installer.sh all
         shell: bash
