@@ -44,4 +44,4 @@ jobs:
         run: chmod +x linux_installer.sh
 
       - name: Run the script
-        run: sudo ./linux_installer.sh
+        run: sudo ./linux_installer.sh all
