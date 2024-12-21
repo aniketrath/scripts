@@ -156,23 +156,43 @@ install_editors_flatpak() {
 
 install_docker() {
     echo "Installing Docker..."
-    
-    # Remove containerd if it conflicts
+
+    # Remove conflicting containerd package if it exists
     case "$PACKAGE_MANAGER" in
     apt)
-        sudo apt remove -y containerd
+        # Check if containerd is installed and remove it
+        if dpkg -l | grep -q containerd; then
+            echo "Removing existing containerd package..."
+            sudo apt remove -y containerd
+        fi
+        # Install Docker
         sudo apt install -y docker.io
         ;;
     pacman)
-        sudo pacman -R --noconfirm containerd
+        # Check if containerd is installed and remove it
+        if pacman -Qs containerd; then
+            echo "Removing existing containerd package..."
+            sudo pacman -R --noconfirm containerd
+        fi
+        # Install Docker
         sudo pacman -S --noconfirm docker
         ;;
     yum)
-        sudo yum remove -y containerd
+        # Check if containerd is installed and remove it
+        if rpm -q containerd; then
+            echo "Removing existing containerd package..."
+            sudo yum remove -y containerd
+        fi
+        # Install Docker
         sudo yum install -y docker
         ;;
     dnf)
-        sudo dnf remove -y containerd
+        # Check if containerd is installed and remove it
+        if rpm -q containerd; then
+            echo "Removing existing containerd package..."
+            sudo dnf remove -y containerd
+        fi
+        # Install Docker
         sudo dnf install -y docker
         ;;
     esac
