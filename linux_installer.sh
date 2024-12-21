@@ -160,39 +160,41 @@ install_docker() {
     # Remove conflicting containerd package if it exists
     case "$PACKAGE_MANAGER" in
     apt)
-        # Check if containerd is installed and remove it
         if dpkg -l | grep -q containerd; then
             echo "Removing existing containerd package..."
             sudo apt remove -y containerd
         fi
+        # Clean up Docker leftovers
+        sudo apt remove -y docker docker.io containerd.io
+        sudo apt purge -y docker docker.io containerd.io
+        sudo apt autoremove -y
+        sudo apt clean
         # Install Docker
+        sudo apt update
         sudo apt install -y docker.io
         ;;
     pacman)
-        # Check if containerd is installed and remove it
         if pacman -Qs containerd; then
             echo "Removing existing containerd package..."
             sudo pacman -R --noconfirm containerd
         fi
-        # Install Docker
+        sudo pacman -Rns --noconfirm docker docker-compose
         sudo pacman -S --noconfirm docker
         ;;
     yum)
-        # Check if containerd is installed and remove it
         if rpm -q containerd; then
             echo "Removing existing containerd package..."
             sudo yum remove -y containerd
         fi
-        # Install Docker
+        sudo yum remove -y docker docker-compose
         sudo yum install -y docker
         ;;
     dnf)
-        # Check if containerd is installed and remove it
         if rpm -q containerd; then
             echo "Removing existing containerd package..."
             sudo dnf remove -y containerd
         fi
-        # Install Docker
+        sudo dnf remove -y docker docker-compose
         sudo dnf install -y docker
         ;;
     esac
@@ -295,10 +297,9 @@ run_all_functions() {
     install_zinit
     install_network_tools
     install_flatpak
-    add_shell_aliases
-    echo -e "${GREEN}All functions executed successfully.${RESET}"
 }
 
+Test
 # Main script logic
 if [[ "$1" == "all" ]]; then
     run_all_functions
