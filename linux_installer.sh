@@ -156,20 +156,27 @@ install_editors_flatpak() {
 
 install_docker() {
     echo "Installing Docker..."
+    
+    # Remove containerd if it conflicts
     case "$PACKAGE_MANAGER" in
     apt)
+        sudo apt remove -y containerd
         sudo apt install -y docker.io
         ;;
     pacman)
+        sudo pacman -R --noconfirm containerd
         sudo pacman -S --noconfirm docker
         ;;
     yum)
+        sudo yum remove -y containerd
         sudo yum install -y docker
         ;;
     dnf)
+        sudo dnf remove -y containerd
         sudo dnf install -y docker
         ;;
     esac
+
     sudo systemctl enable --now docker
     sudo usermod -aG docker "$USER"
     echo -e "${GREEN}Docker installed. You might need to restart your session.${RESET}"
