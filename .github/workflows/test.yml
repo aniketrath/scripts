@@ -10,38 +10,26 @@ jobs:
   test-linux_installer:
     strategy:
       matrix:
-        os: [ubuntu-latest, archlinux, centos-latest, fedora-latest]
-    runs-on: ${{ matrix.os }}
+        os: [ubuntu-20.04, ubuntu-22.04, archlinux, rockylinux-8, fedora]
+    runs-on: ubuntu-latest  # Use Ubuntu as the base runner to execute Docker commands
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up environment for Arch
-        if: matrix.os == 'archlinux'
+      - name: Set up Docker
         run: |
-          sudo pacman -Syu --noconfirm
-          sudo pacman -S --noconfirm base-devel
+          sudo apt-get update
+          sudo apt-get install -y docker.io
 
-      - name: Set up environment for Ubuntu
-        if: matrix.os == 'ubuntu-latest'
+      - name: Build Docker image for the selected OS
         run: |
-          sudo apt update
-          sudo apt install -y curl wget zsh
+          docker pull ${{ matrix.os }}:latest  # Pull the respective OS container image
 
-      - name: Set up environment for CentOS
-        if: matrix.os == 'centos-latest'
+      - name: Run script in Docker container
         run: |
-          sudo yum update -y
-          sudo yum install -y epel-release
-
-      - name: Set up environment for Fedora
-        if: matrix.os == 'fedora-latest'
-        run: |
-          sudo dnf upgrade --refresh -y
-
-      - name: Make script executable
-        run: chmod +x linux_installer.sh
-
-      - name: Run the script
-        run: sudo ./linux_installer.sh all
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace ${{ matrix.os }}:latest bash -c "
+            # Run installation commands 
+            chmod +x linux_installer.sh
+            sudo ./linux_installer.sh all
+          "
