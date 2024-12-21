@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  test-linux-installer:
+  test-linux_installer:
     strategy:
       matrix:
         os: [ubuntu-latest, archlinux, centos-latest, fedora-latest]
@@ -41,7 +41,7 @@ jobs:
           sudo dnf upgrade --refresh -y
 
       - name: Make script executable
-        run: chmod +x Linux-Installer.sh
+        run: chmod +x linux_installer.sh
 
       - name: Run the script
-        run: sudo ./Linux-Installer.sh
+        run: sudo ./linux_installer.sh
