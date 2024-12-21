@@ -1,0 +1,58 @@
+name: Test Setup Scripts
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test-arch:
+    name: Test Arch Setup Script
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Arch Linux Container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: manjaro:latest  # Use Manjaro as the Arch-based distro
+          options: --privileged
+          run: |
+            pacman -Syu --noconfirm && pacman -S --noconfirm sudo
+            useradd -m github
+            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
+            chmod 0440 /etc/sudoers.d/github
+            su - github
+
+      - name: Run Arch Setup Script
+        run: |
+          chmod +700 ./arch_setup.sh
+          sudo ./arch_setup.sh
+        shell: bash
+
+  test-debian:
+    name: Debian Setup Script
+    runs-on: ubuntu-latest  # Use Ubuntu as the Debian-based distro
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Ubuntu Container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ubuntu:latest  # Use Ubuntu as the Debian-based distro
+          options: --privileged
+          run: |
+            apt update && apt install -y sudo
+            useradd -m github
+            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
+            chmod 0440 /etc/sudoers.d/github
+            su - github
+
+      - name: Run Debian Setup Script
+        run: |
+          chmod +700 ./debian_setup.sh
+          sudo ./debian_setup.sh
+        shell: bash
