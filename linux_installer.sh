@@ -156,49 +156,23 @@ install_editors_flatpak() {
 
 install_docker() {
     echo "Installing Docker..."
+    # Remove conflicting containerd package if exists
+    sudo apt-get remove --purge -y containerd
+    sudo apt-get clean
+    sudo apt-get update
+    
+    # Install Docker dependencies and Docker itself
+    sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+    
+    # Add Docker's official GPG key and repository
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/trusted.gpg.d/docker.asc
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    
+    # Install Docker and containerd.io
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
-    # Remove conflicting containerd package if it exists
-    case "$PACKAGE_MANAGER" in
-    apt)
-        if dpkg -l | grep -q containerd; then
-            echo "Removing existing containerd package..."
-            sudo apt remove -y containerd
-        fi
-        # Clean up Docker leftovers
-        sudo apt remove -y docker docker.io containerd.io
-        sudo apt purge -y docker docker.io containerd.io
-        sudo apt autoremove -y
-        sudo apt clean
-        # Install Docker
-        sudo apt update
-        sudo apt install -y docker.io
-        ;;
-    pacman)
-        if pacman -Qs containerd; then
-            echo "Removing existing containerd package..."
-            sudo pacman -R --noconfirm containerd
-        fi
-        sudo pacman -Rns --noconfirm docker docker-compose
-        sudo pacman -S --noconfirm docker
-        ;;
-    yum)
-        if rpm -q containerd; then
-            echo "Removing existing containerd package..."
-            sudo yum remove -y containerd
-        fi
-        sudo yum remove -y docker docker-compose
-        sudo yum install -y docker
-        ;;
-    dnf)
-        if rpm -q containerd; then
-            echo "Removing existing containerd package..."
-            sudo dnf remove -y containerd
-        fi
-        sudo dnf remove -y docker docker-compose
-        sudo dnf install -y docker
-        ;;
-    esac
-
+    # Enable and start Docker service
     sudo systemctl enable --now docker
     sudo usermod -aG docker "$USER"
     echo -e "${GREEN}Docker installed. You might need to restart your session.${RESET}"
@@ -285,9 +259,8 @@ EOF
     echo -e "${GREEN}Aliases added. Please reload your shell using 'source ~/.zshrc'.${RESET}"
 }
 
-# Function to run all tasks sequentially
-run_all_functions() {
-    echo -e "${YELLOW}Running all functions sequentially...${RESET}"
+# Main script logic
+if [[ "$1" == "all" ]]; then
     update_system
     install_common_tools
     install_version_managers
@@ -297,12 +270,8 @@ run_all_functions() {
     install_zinit
     install_network_tools
     install_flatpak
-}
-
-Test
-# Main script logic
-if [[ "$1" == "all" ]]; then
-    run_all_functions
+    add_shell_aliases
+    echo -e "${GREEN}All functions executed successfully.${RESET}"
     exit 0
 fi
 
