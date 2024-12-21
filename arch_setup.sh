@@ -9,6 +9,8 @@ fi
 # Define color codes
 RED='\033[31m'
 GREEN='\033[32m'
+YELLOW='\033[33m'
+BLUE='\033[34m'
 RESET='\033[0m'
 
 # Function to display percentage completion progress
@@ -145,6 +147,12 @@ install_and_report "Kubeadm" "
     sudo pacman -S --noconfirm kubectl kubeadm kubelet &&
     systemctl enable --now kubelet
 " 15 "$log_file" "kubectl"
+
+echo "---------------- INSTALLING ZINIT ------------------"
+install_and_report "ZINIT" "
+    bash -c \"$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)\" &&
+    zinit self-update
+" 10 "$log_file" "zinit"
 
 echo "----------- UPDATING SHELL CONFIGS -----------"
 ALIASES=$(cat << 'EOF'
