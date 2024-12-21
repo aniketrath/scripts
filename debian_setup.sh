@@ -98,6 +98,13 @@ install_and_report "System Updates" "
 
 echo "----------------- INSTALLING APT BASED PACKAGES ---------------------"
 # Install APT packages
+cat << 'EOF' | tee >(echo -e "\033[32m")  # Ensure this part is colored green
+# THE FOLLOWING TO BE INSTALLED :
+-> Neofetch
+-> Zsh
+
+EOF
+
 install_and_report "APT Packages" "sudo apt-get install -y neofetch zsh" 5 "$log_file"  # Example of a smaller number
 
 echo "---------- INSTALLING VERSION MANAGERS : NODE , PYTHON ---------------"
@@ -162,7 +169,7 @@ install_and_report "Kubeadm" "
 echo "---------- UPDATING .BASHRC AND .ZSHRC ---------------"
 ALIASES=$(cat << 'EOF'
 
-# USER CREATED ALIASES : 
+# SCRIPT CREATED ALIASES : 
 
 alias kubectl="minikube kubectl --"
 alias appupdate="sudo apt-get update -y"
@@ -205,7 +212,6 @@ alias appupdate                                "sudo apt-get update -y"
 alias appupgrade                               "sudo apt-get upgrade -y"
 alias appinstall                               "sudo apt-get install -y"
 alias appremove                                "sudo apt-get remove -y"
-
 ------------------------------------------------------------------------------------
 COMMANDS TO RUN POST SCRIPT :
 
