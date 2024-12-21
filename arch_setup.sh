@@ -22,7 +22,6 @@ loading_percentage() {
     # Print the application name in green
     echo -e "${GREEN}$message${RESET}"
     echo  # Newline for the message
-
     while [ $current_step -le $total_steps ]; do
         local percentage=$(( 100 * current_step / total_steps ))
 
