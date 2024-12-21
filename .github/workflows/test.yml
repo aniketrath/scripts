@@ -1,37 +1,106 @@
-name: Test Linux Installer Script
+name: Test Setup Scripts
 
 on:
   push:
     branches:
-      - "*"
+      - '*'  # Trigger on push to any branch
   pull_request:
     branches:
-      - "*"
+      - '*'  # Trigger on pull request to any branch
 
 jobs:
-  test-linux_installer:
-    strategy:
-      matrix:
-        os: [ubuntu-20.04, ubuntu-22.04, archlinux, rockylinux-8, fedora]
-    runs-on: ubuntu-latest  # Use Ubuntu as the base runner to execute Docker commands
-
+  test-arch:
+    name: Test Arch Setup Script
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up Docker
+      - name: Arch Linux Container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: manjarolinux/base:latest  # Use Manjaro as the Arch-based distro
+          options: --privileged
+          run: |
+            pacman -Syu --noconfirm && pacman -S --noconfirm sudo
+            useradd -m github
+            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
+            chmod 0440 /etc/sudoers.d/github
+            su - github
+      - name: Run Arch Setup Script
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
+          chmod +700 ./arch_setup.sh
+          sudo ./arch_setup.sh
+        shell: bash
 
-      - name: Build Docker image for the selected OS
-        run: |
-          docker pull ${{ matrix.os }}:latest  # Pull the respective OS container image
+  test-debian:
+    name: Debian Setup Script
+    runs-on: ubuntu-latest  # Use Ubuntu as the Debian-based distro
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-      - name: Run script in Docker container
+      - name: Ubuntu Container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ubuntu:latest  # Use Ubuntu as the Debian-based distro
+          options: --privileged
+          run: |
+            apt update && apt install -y sudo
+            useradd -m github
+            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
+            chmod 0440 /etc/sudoers.d/github
+            su - github
+      - name: Run Debian Setup Script
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace ${{ matrix.os }}:latest bash -c "
-            # Run installation commands 
-            chmod +x linux_installer.sh
-            sudo ./linux_installer.sh all
-          "
+          chmod +700 ./debian_setup.sh
+          sudo ./debian_setup.sh
+        shell: bash
+
+  test-rocky:
+    name: Rocky Linux Setup Script
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Rocky Linux Container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: rockylinux:latest  # Use Rocky Linux as the distro
+          options: --privileged
+          run: |
+            yum update -y && yum install -y sudo
+            useradd -m github
+            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
+            chmod 0440 /etc/sudoers.d/github
+            su - github
+      - name: Run Rocky Linux Setup Script
+        run: |
+          chmod +700 ./rocky_setup.sh
+          sudo ./rocky_setup.sh
+        shell: bash
+
+  test-fedora:
+    name: Fedora Setup Script
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Fedora Container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: fedora:latest  # Use Fedora as the distro
+          options: --privileged
+          run: |
+            dnf update -y && dnf install -y sudo
+            useradd -m github
+            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
+            chmod 0440 /etc/sudoers.d/github
+            su - github
+      - name: Run Fedora Setup Script
+        run: |
+          chmod +700 ./fedora_setup.sh
+          sudo ./fedora_setup.sh
+        shell: bash

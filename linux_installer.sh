@@ -13,6 +13,28 @@ YELLOW='\033[33m'
 BLUE='\033[34m'
 RESET='\033[0m'
 
+# Detect package manager
+detect_package_manager() {
+    if command -v apt &>/dev/null; then
+        echo "apt"
+    elif command -v pacman &>/dev/null; then
+        echo "pacman"
+    elif command -v yum &>/dev/null; then
+        echo "yum"
+    elif command -v dnf &>/dev/null; then
+        echo "dnf"
+    else
+        echo "unsupported"
+    fi
+}
+
+PACKAGE_MANAGER=$(detect_package_manager)
+
+if [ "$PACKAGE_MANAGER" == "unsupported" ]; then
+    echo -e "${RED}Unsupported Linux distribution. Exiting.${RESET}"
+    exit 1
+fi
+
 # Function to display the main menu
 show_menu() {
     echo -e "${BLUE}Select an option:${RESET}"
@@ -20,11 +42,13 @@ show_menu() {
     echo "2. Install Common Tools (Neofetch, Git, Curl, Wget, Zsh)"
     echo "3. Install Version Managers (NVM, Miniconda)"
     echo "4. Install Editors (ZED, VS Code, Wireshark) using Flatpak"
-    echo "5. Install Zinit for Zsh"
-    echo "6. Install Network Tools (Netcat, Nmap, Traceroute, Iperf)"
-    echo "7. Add Aliases to Shell Config"
-    echo "8. Install and Enable Flatpak"
-    echo "9. Exit"
+    echo "5. Install Docker"
+    echo "6. Install Kubernetes (Kubeadm)"
+    echo "7. Install Zinit for Zsh"
+    echo "8. Install Network Tools (Netcat, Nmap, Traceroute, Iperf)"
+    echo "9. Add Aliases to Shell Config"
+    echo "10. Install and Enable Flatpak"
+    echo "11. Exit"
 }
 
 # Function to handle menu selection
@@ -43,18 +67,24 @@ handle_menu_choice() {
         install_editors_flatpak
         ;;
     5)
-        install_zinit
+        install_docker
         ;;
     6)
-        install_network_tools
+        install_kubernetes
         ;;
     7)
-        add_shell_aliases
+        install_zinit
         ;;
     8)
-        install_flatpak
+        install_network_tools
         ;;
     9)
+        add_shell_aliases
+        ;;
+    10)
+        install_flatpak
+        ;;
+    11)
         echo "Exiting the script. Goodbye!"
         exit 0
         ;;
@@ -67,7 +97,20 @@ handle_menu_choice() {
 # Functions for each menu option
 update_system() {
     echo "Updating system..."
-    # Add your update logic here (e.g., `apt update && apt upgrade -y` for Debian-based systems)
+    case "$PACKAGE_MANAGER" in
+    apt)
+        sudo apt update && sudo apt upgrade -y
+        ;;
+    pacman)
+        sudo pacman -Syu --noconfirm
+        ;;
+    yum)
+        sudo yum update -y
+        ;;
+    dnf)
+        sudo dnf upgrade --refresh -y
+        ;;
+    esac
     echo -e "${GREEN}System updated.${RESET}"
 }
 
@@ -75,7 +118,20 @@ install_common_tools() {
     local tools=("neofetch" "zsh" "git" "curl" "wget")
     for tool in "${tools[@]}"; do
         echo "Installing $tool..."
-        # Add installation logic here (e.g., `apt install -y $tool`)
+        case "$PACKAGE_MANAGER" in
+        apt)
+            sudo apt install -y "$tool"
+            ;;
+        pacman)
+            sudo pacman -S --noconfirm "$tool"
+            ;;
+        yum)
+            sudo yum install -y "$tool"
+            ;;
+        dnf)
+            sudo dnf install -y "$tool"
+            ;;
+        esac
         echo -e "${GREEN}$tool installed.${RESET}"
     done
 }
@@ -98,6 +154,76 @@ install_editors_flatpak() {
     echo -e "${GREEN}Editors and tools installed via Flatpak.${RESET}"
 }
 
+install_docker() {
+    echo "Installing Docker..."
+
+    # Remove conflicting containerd package if it exists
+    case "$PACKAGE_MANAGER" in
+    apt)
+        if dpkg -l | grep -q containerd; then
+            echo "Removing existing containerd package..."
+            sudo apt remove -y containerd
+        fi
+        # Clean up Docker leftovers
+        sudo apt remove -y docker docker.io containerd.io
+        sudo apt purge -y docker docker.io containerd.io
+        sudo apt autoremove -y
+        sudo apt clean
+        # Install Docker
+        sudo apt update
+        sudo apt install -y docker.io
+        ;;
+    pacman)
+        if pacman -Qs containerd; then
+            echo "Removing existing containerd package..."
+            sudo pacman -R --noconfirm containerd
+        fi
+        sudo pacman -Rns --noconfirm docker docker-compose
+        sudo pacman -S --noconfirm docker
+        ;;
+    yum)
+        if rpm -q containerd; then
+            echo "Removing existing containerd package..."
+            sudo yum remove -y containerd
+        fi
+        sudo yum remove -y docker docker-compose
+        sudo yum install -y docker
+        ;;
+    dnf)
+        if rpm -q containerd; then
+            echo "Removing existing containerd package..."
+            sudo dnf remove -y containerd
+        fi
+        sudo dnf remove -y docker docker-compose
+        sudo dnf install -y docker
+        ;;
+    esac
+
+    sudo systemctl enable --now docker
+    sudo usermod -aG docker "$USER"
+    echo -e "${GREEN}Docker installed. You might need to restart your session.${RESET}"
+}
+
+install_kubernetes() {
+    echo "Installing Kubernetes..."
+    case "$PACKAGE_MANAGER" in
+    apt)
+        sudo apt install -y kubectl kubeadm kubelet
+        ;;
+    pacman)
+        sudo pacman -S --noconfirm kubectl kubeadm kubelet
+        ;;
+    yum)
+        sudo yum install -y kubectl kubeadm kubelet
+        ;;
+    dnf)
+        sudo dnf install -y kubectl kubeadm kubelet
+        ;;
+    esac
+    sudo systemctl enable --now kubelet
+    echo -e "${GREEN}Kubernetes installed.${RESET}"
+}
+
 install_zinit() {
     echo "Installing Zinit..."
     bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
@@ -109,14 +235,40 @@ install_network_tools() {
     local tools=("netcat" "nmap" "traceroute" "iperf3")
     for tool in "${tools[@]}"; do
         echo "Installing $tool..."
-        # Add installation logic here (e.g., `apt install -y $tool`)
+        case "$PACKAGE_MANAGER" in
+        apt)
+            sudo apt install -y "$tool"
+            ;;
+        pacman)
+            sudo pacman -S --noconfirm "$tool"
+            ;;
+        yum)
+            sudo yum install -y "$tool"
+            ;;
+        dnf)
+            sudo dnf install -y "$tool"
+            ;;
+        esac
         echo -e "${GREEN}$tool installed.${RESET}"
     done
 }
 
 install_flatpak() {
     echo "Installing and enabling Flatpak..."
-    # Add Flatpak installation logic here (e.g., `apt install -y flatpak`)
+    case "$PACKAGE_MANAGER" in
+    apt)
+        sudo apt install -y flatpak
+        ;;
+    pacman)
+        sudo pacman -S --noconfirm flatpak
+        ;;
+    yum)
+        sudo yum install -y flatpak
+        ;;
+    dnf)
+        sudo dnf install -y flatpak
+        ;;
+    esac
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     echo -e "${GREEN}Flatpak installed and enabled.${RESET}"
 }
@@ -140,13 +292,14 @@ run_all_functions() {
     install_common_tools
     install_version_managers
     install_editors_flatpak
+    install_docker
+    install_kubernetes
     install_zinit
     install_network_tools
     install_flatpak
-    add_shell_aliases
-    echo -e "${GREEN}All functions executed successfully.${RESET}"
 }
 
+Test
 # Main script logic
 if [[ "$1" == "all" ]]; then
     run_all_functions
