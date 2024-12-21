@@ -1,60 +1,47 @@
-name: Test Setup Scripts
+name: Test Linux Installer Script
 
 on:
   push:
     branches:
-      - master  # Trigger on push to master
+      - main
   pull_request:
-    branches:
-      - master  # Trigger on pull request to master
 
 jobs:
-  test-arch:
-    name: Test Arch Setup Script
-    runs-on: ubuntu-latest
+  test-linux-installer:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, archlinux, centos-latest, fedora-latest]
+    runs-on: ${{ matrix.os }}
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Arch Linux Container
-        uses: addnab/docker-run-action@v3
-        with:
-          image: manjarolinux/base:latest  # Use Manjaro as the Arch-based distro
-          options: --privileged
-          run: |
-            pacman -Syu --noconfirm && pacman -S --noconfirm sudo
-            useradd -m github
-            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
-            chmod 0440 /etc/sudoers.d/github
-            su - github
-
-      - name: Run Arch Setup Script
+      - name: Set up environment for Arch
+        if: matrix.os == 'archlinux'
         run: |
-          chmod +700 ./arch_setup.sh
-          sudo ./arch_setup.sh
-        shell: bash
+          sudo pacman -Syu --noconfirm
+          sudo pacman -S --noconfirm base-devel
 
-  test-debian:
-    name: Debian Setup Script
-    runs-on: ubuntu-latest  # Use Ubuntu as the Debian-based distro
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Ubuntu Container
-        uses: addnab/docker-run-action@v3
-        with:
-          image: ubuntu:latest  # Use Ubuntu as the Debian-based distro
-          options: --privileged
-          run: |
-            apt update && apt install -y sudo
-            useradd -m github
-            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
-            chmod 0440 /etc/sudoers.d/github
-            su - github
-
-      - name: Run Debian Setup Script
+      - name: Set up environment for Ubuntu
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          chmod +700 ./debian_setup.sh
-          sudo ./debian_setup.sh
-        shell: bash
+          sudo apt update
+          sudo apt install -y curl wget zsh
+
+      - name: Set up environment for CentOS
+        if: matrix.os == 'centos-latest'
+        run: |
+          sudo yum update -y
+          sudo yum install -y epel-release
+
+      - name: Set up environment for Fedora
+        if: matrix.os == 'fedora-latest'
+        run: |
+          sudo dnf upgrade --refresh -y
+
+      - name: Make script executable
+        run: chmod +x Linux-Installer.sh
+
+      - name: Run the script
+        run: sudo ./Linux-Installer.sh
