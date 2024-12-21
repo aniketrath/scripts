@@ -19,7 +19,7 @@ jobs:
       - name: Arch Linux Container
         uses: addnab/docker-run-action@v3
         with:
-          image: manjaro:latest  # Use Manjaro as the Arch-based distro
+          image: manjarolinux/base:latest  # Use Manjaro as the Arch-based distro
           options: --privileged
           run: |
             pacman -Syu --noconfirm && pacman -S --noconfirm sudo
