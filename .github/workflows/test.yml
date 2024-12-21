@@ -3,8 +3,10 @@ name: Test Setup Scripts
 on:
   push:
     branches:
-      - main
+      - master  # Trigger on push to master
   pull_request:
+    branches:
+      - master  # Trigger on pull request to master
 
 jobs:
   test-arch:
