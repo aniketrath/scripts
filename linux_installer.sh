@@ -72,6 +72,22 @@ handle_menu_choice() {
     esac
 }
 
+# Function to run all tasks sequentially
+run_all_functions() {
+    echo -e "${YELLOW}Running all functions sequentially...${RESET}"
+    update_system
+    install_common_tools
+    install_version_managers
+    install_editors_flatpak
+    install_docker
+    install_kubernetes
+    install_zinit
+    install_network_tools
+    install_flatpak
+    add_shell_aliases
+    echo -e "${GREEN}All tasks completed successfully.${RESET}"
+}
+
 # Functions for each menu option
 update_system() {
     echo "Updating system..."
@@ -194,6 +210,12 @@ alias sysinstall="$alias_install"
 EOF
     echo -e "${GREEN}Aliases added. Please reload your shell using 'source ~/.zshrc'.${RESET}"
 }
+
+# Main script logic
+if [[ "$1" == "all" ]]; then
+    run_all_functions
+    exit 0
+fi
 
 # Main script loop
 while true; do
