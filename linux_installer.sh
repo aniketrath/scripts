@@ -85,7 +85,7 @@ run_all_functions() {
     install_kubernetes
     install_zinit
     install_network_tools
-    install_flatpak
+    install_editors_flatpak
     add_shell_aliases
     echo -e "${GREEN}All tasks completed successfully.${RESET}"
 }
@@ -165,20 +165,33 @@ install_docker() {
 }
 
 install_kubernetes() {
-    echo "Installing Kubernetes..."
-    case "$PACKAGE_MANAGER" in
-    apt|apt-get) sudo apt-get install -y -qq kubectl kubeadm kubelet >/dev/null ;;
-    pacman) sudo pacman -S --noconfirm --quiet kubectl kubeadm kubelet >/dev/null ;;
-    yum) sudo yum install -q -y kubectl kubeadm kubelet >/dev/null ;;
-    dnf) sudo dnf install -q -y kubectl kubeadm kubelet >/dev/null ;;
-    *)
-        echo -e "${RED}Unsupported package manager. Could not install Kubernetes.${RESET}"
-        exit 1
-        ;;
-    esac
-    sudo systemctl enable --now kubelet >/dev/null
-    echo -e "${GREEN}Kubernetes installed.${RESET}"
+    echo "Installing Kubernetes (kubectl)..."
+
+    # Specify the version and architecture for kubectl
+    KUBECTL_VERSION="v1.32.0"
+    KUBECTL_ARCH="amd64"
+    KUBECTL_BIN="kubectl"
+
+    # Download the kubectl binary using curl
+    echo "Downloading kubectl version $KUBECTL_VERSION..."
+    curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${KUBECTL_ARCH}/${KUBECTL_BIN}" >/dev/null 2>&1
+
+    if [[ -f "$KUBECTL_BIN" ]]; then
+        # Make the binary executable
+        chmod +x "$KUBECTL_BIN"
+        # Move it to a directory in the PATH (e.g., /usr/local/bin)
+        sudo mv "$KUBECTL_BIN" /usr/local/bin/
+        # Verify installation
+        if command -v kubectl &>/dev/null; then
+            echo -e "${GREEN}Kubernetes (kubectl) version $KUBECTL_VERSION installed successfully.${RESET}"
+        else
+            echo -e "${RED}Failed to install kubectl. Please check the installation steps.${RESET}"
+        fi
+    else
+        echo -e "${RED}Failed to download kubectl binary. Please check the URL or your network connection.${RESET}"
+    fi
 }
+
 
 install_zinit() {
     echo "Installing Zinit..."
