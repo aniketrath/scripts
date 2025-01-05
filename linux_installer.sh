@@ -215,33 +215,33 @@ install_editors_flatpak() {
         case "$PACKAGE_MANAGER" in
         apt | apt-get)
             # Add the PPA repository for Flatpak and install
-            sudo add-apt-repository -y ppa:flatpak/stable
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq flatpak
+            sudo add-apt-repository -y ppa:flatpak/stable >/dev/null 2>&1
+            sudo apt-get update -qq >/dev/null 2>&1
+            sudo apt-get install -y flatpak >/dev/null 2>&1
             ;;
         pacman)
             # Arch/Manjaro
-            sudo pacman -S --noconfirm --quiet flatpak
+            sudo pacman -S --noconfirm --quiet flatpak >/dev/null 2>&1
             ;;
         yum)
             # Rocky/CentOS (and other Red Hat-based)
-            sudo yum install -q -y flatpak
+            sudo yum install -q -y flatpak >/dev/null 2>&1
             # Add Flathub repository for Yum-based systems
-            flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+            flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo >/dev/null 2>&1
             ;;
         dnf)
             # Fedora
-            sudo dnf install -q -y flatpak
+            sudo dnf install -q -y flatpak >/dev/null 2>&1
             # Add Flathub repository for Fedora
-            flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+            flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo >/dev/null 2>&1
             ;;
         esac
     fi
 
     # Now install the Flatpak tools
-    flatpak install -y -q flathub org.zed.Zed
-    flatpak install -y -q flathub com.visualstudio.code
-    flatpak install -y -q flathub org.wireshark.Wireshark
+    flatpak install -y -q flathub org.zed.Zed >/dev/null 2>&1
+    flatpak install -y -q flathub com.visualstudio.code >/dev/null 2>&1
+    flatpak install -y -q flathub org.wireshark.Wireshark >/dev/null 2>&1
     echo -e "${GREEN}Editors and tools installed via Flatpak.${RESET}"
 }
 
