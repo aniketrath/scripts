@@ -54,43 +54,21 @@ show_menu() {
 # Function to handle menu selection
 handle_menu_choice() {
     case $1 in
-    1)
-        update_system
-        ;;
-    2)
-        install_common_tools
-        ;;
-    3)
-        install_version_managers
-        ;;
-    4)
-        install_editors_flatpak
-        ;;
-    5)
-        install_docker
-        ;;
-    6)
-        install_kubernetes
-        ;;
-    7)
-        install_zinit
-        ;;
-    8)
-        install_network_tools
-        ;;
-    9)
-        add_shell_aliases
-        ;;
-    10)
-        install_flatpak
-        ;;
+    1) update_system ;;
+    2) install_common_tools ;;
+    3) install_version_managers ;;
+    4) install_editors_flatpak ;;
+    5) install_docker ;;
+    6) install_kubernetes ;;
+    7) install_zinit ;;
+    8) install_network_tools ;;
+    9) add_shell_aliases ;;
+    10) install_flatpak ;;
     11)
         echo "Exiting the script. Goodbye!"
         exit 0
         ;;
-    *)
-        echo -e "${RED}Invalid choice. Please select a valid option.${RESET}"
-        ;;
+    *) echo -e "${RED}Invalid choice. Please select a valid option.${RESET}" ;;
     esac
 }
 
@@ -98,18 +76,10 @@ handle_menu_choice() {
 update_system() {
     echo "Updating system..."
     case "$PACKAGE_MANAGER" in
-    apt)
-        sudo apt update && sudo apt upgrade -y
-        ;;
-    pacman)
-        sudo pacman -Syu --noconfirm
-        ;;
-    yum)
-        sudo yum update -y
-        ;;
-    dnf)
-        sudo dnf upgrade --refresh -y
-        ;;
+    apt) sudo apt update -qq && sudo apt upgrade -y -qq ;;
+    pacman) sudo pacman -Syu --noconfirm --quiet ;;
+    yum) sudo yum update -q -y ;;
+    dnf) sudo dnf upgrade --refresh -q -y ;;
     esac
     echo -e "${GREEN}System updated.${RESET}"
 }
@@ -119,18 +89,10 @@ install_common_tools() {
     for tool in "${tools[@]}"; do
         echo "Installing $tool..."
         case "$PACKAGE_MANAGER" in
-        apt)
-            sudo apt install -y "$tool"
-            ;;
-        pacman)
-            sudo pacman -S --noconfirm "$tool"
-            ;;
-        yum)
-            sudo yum install -y "$tool"
-            ;;
-        dnf)
-            sudo dnf install -y "$tool"
-            ;;
+        apt) sudo apt install -y -qq "$tool" ;;
+        pacman) sudo pacman -S --noconfirm --quiet "$tool" ;;
+        yum) sudo yum install -q -y "$tool" ;;
+        dnf) sudo dnf install -q -y "$tool" ;;
         esac
         echo -e "${GREEN}$tool installed.${RESET}"
     done
@@ -138,67 +100,35 @@ install_common_tools() {
 
 install_version_managers() {
     echo "Installing NVM..."
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash >/dev/null 2>&1
     echo "Installing Miniconda..."
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
-    bash ~/miniconda.sh -b -u -p ~/miniconda3
-    ~/miniconda3/bin/conda init
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh >/dev/null 2>&1
+    bash ~/miniconda.sh -b -u -p ~/miniconda3 >/dev/null 2>&1
+    ~/miniconda3/bin/conda init >/dev/null 2>&1
     echo -e "${GREEN}Version managers installed.${RESET}"
 }
 
 install_editors_flatpak() {
     echo "Installing editors and tools using Flatpak..."
-    flatpak install -y flathub com.zed.Zed
-    flatpak install -y flathub com.visualstudio.code
-    flatpak install -y flathub org.wireshark.Wireshark
+    flatpak install -y -q flathub org.zed.Zed
+    flatpak install -y -q flathub com.visualstudio.code
+    flatpak install -y -q flathub org.wireshark.Wireshark
     echo -e "${GREEN}Editors and tools installed via Flatpak.${RESET}"
 }
 
 install_docker() {
     echo "Installing Docker..."
-
-    # Remove conflicting containerd package if it exists
     case "$PACKAGE_MANAGER" in
-    apt)
-        if dpkg -l | grep -q containerd; then
-            echo "Removing existing containerd package..."
-            sudo apt remove -y containerd
-        fi
-        # Clean up Docker leftovers
-        sudo apt remove -y docker docker.io containerd.io
-        sudo apt purge -y docker docker.io containerd.io
-        sudo apt autoremove -y
-        sudo apt clean
-        # Install Docker
-        sudo apt update
-        sudo apt install -y docker.io
-        ;;
-    pacman)
-        if pacman -Qs containerd; then
-            echo "Removing existing containerd package..."
-            sudo pacman -R --noconfirm containerd
-        fi
-        sudo pacman -Rns --noconfirm docker docker-compose
-        sudo pacman -S --noconfirm docker
-        ;;
-    yum)
-        if rpm -q containerd; then
-            echo "Removing existing containerd package..."
-            sudo yum remove -y containerd
-        fi
-        sudo yum remove -y docker docker-compose
-        sudo yum install -y docker
-        ;;
-    dnf)
-        if rpm -q containerd; then
-            echo "Removing existing containerd package..."
-            sudo dnf remove -y containerd
-        fi
-        sudo dnf remove -y docker docker-compose
-        sudo dnf install -y docker
-        ;;
+    apt) sudo apt purge -y -qq docker docker.io containerd.io >/dev/null 2>&1 || true
+         sudo apt autoremove -y -qq >/dev/null 2>&1 || true
+         sudo apt install -y -qq docker.io ;;
+    pacman) sudo pacman -Rns --noconfirm --quiet docker >/dev/null 2>&1 || true
+            sudo pacman -S --noconfirm --quiet docker ;;
+    yum) sudo yum remove -q -y docker docker-compose >/dev/null 2>&1 || true
+         sudo yum install -q -y docker ;;
+    dnf) sudo dnf remove -q -y docker docker-compose >/dev/null 2>&1 || true
+         sudo dnf install -q -y docker ;;
     esac
-
     sudo systemctl enable --now docker
     sudo usermod -aG docker "$USER"
     echo -e "${GREEN}Docker installed. You might need to restart your session.${RESET}"
@@ -207,18 +137,10 @@ install_docker() {
 install_kubernetes() {
     echo "Installing Kubernetes..."
     case "$PACKAGE_MANAGER" in
-    apt)
-        sudo apt install -y kubectl kubeadm kubelet
-        ;;
-    pacman)
-        sudo pacman -S --noconfirm kubectl kubeadm kubelet
-        ;;
-    yum)
-        sudo yum install -y kubectl kubeadm kubelet
-        ;;
-    dnf)
-        sudo dnf install -y kubectl kubeadm kubelet
-        ;;
+    apt) sudo apt install -y -qq kubectl kubeadm kubelet ;;
+    pacman) sudo pacman -S --noconfirm --quiet kubectl kubeadm kubelet ;;
+    yum) sudo yum install -q -y kubectl kubeadm kubelet ;;
+    dnf) sudo dnf install -q -y kubectl kubeadm kubelet ;;
     esac
     sudo systemctl enable --now kubelet
     echo -e "${GREEN}Kubernetes installed.${RESET}"
@@ -226,8 +148,7 @@ install_kubernetes() {
 
 install_zinit() {
     echo "Installing Zinit..."
-    bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
-    zinit self-update
+    bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)" >/dev/null 2>&1
     echo -e "${GREEN}Zinit installed.${RESET}"
 }
 
@@ -236,18 +157,10 @@ install_network_tools() {
     for tool in "${tools[@]}"; do
         echo "Installing $tool..."
         case "$PACKAGE_MANAGER" in
-        apt)
-            sudo apt install -y "$tool"
-            ;;
-        pacman)
-            sudo pacman -S --noconfirm "$tool"
-            ;;
-        yum)
-            sudo yum install -y "$tool"
-            ;;
-        dnf)
-            sudo dnf install -y "$tool"
-            ;;
+        apt) sudo apt install -y -qq "$tool" ;;
+        pacman) sudo pacman -S --noconfirm --quiet "$tool" ;;
+        yum) sudo yum install -q -y "$tool" ;;
+        dnf) sudo dnf install -q -y "$tool" ;;
         esac
         echo -e "${GREEN}$tool installed.${RESET}"
     done
@@ -256,18 +169,10 @@ install_network_tools() {
 install_flatpak() {
     echo "Installing and enabling Flatpak..."
     case "$PACKAGE_MANAGER" in
-    apt)
-        sudo apt install -y flatpak
-        ;;
-    pacman)
-        sudo pacman -S --noconfirm flatpak
-        ;;
-    yum)
-        sudo yum install -y flatpak
-        ;;
-    dnf)
-        sudo dnf install -y flatpak
-        ;;
+    apt) sudo apt install -y -qq flatpak ;;
+    pacman) sudo pacman -S --noconfirm --quiet flatpak ;;
+    yum) sudo yum install -q -y flatpak ;;
+    dnf) sudo dnf install -q -y flatpak ;;
     esac
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     echo -e "${GREEN}Flatpak installed and enabled.${RESET}"
@@ -275,36 +180,20 @@ install_flatpak() {
 
 add_shell_aliases() {
     echo "Adding aliases to ~/.zshrc..."
+    case "$PACKAGE_MANAGER" in
+    apt) alias_update="sudo apt update" ; alias_install="sudo apt install -y" ;;
+    pacman) alias_update="sudo pacman -Syu" ; alias_install="sudo pacman -S --noconfirm" ;;
+    yum) alias_update="sudo yum update" ; alias_install="sudo yum install -y" ;;
+    dnf) alias_update="sudo dnf upgrade" ; alias_install="sudo dnf install -y" ;;
+    esac
     cat <<EOF >>~/.zshrc
 
 # Added by installation script
-alias kubectl="minikube kubectl --"
-alias sysupdate="sudo $PACKAGE_MANAGER -Syu"
-alias sysinstall="sudo $PACKAGE_MANAGER -S --noconfirm"
+alias sysupdate="$alias_update"
+alias sysinstall="$alias_install"
 EOF
     echo -e "${GREEN}Aliases added. Please reload your shell using 'source ~/.zshrc'.${RESET}"
 }
-
-# Function to run all tasks sequentially
-run_all_functions() {
-    echo -e "${YELLOW}Running all functions sequentially...${RESET}"
-    update_system
-    install_common_tools
-    install_version_managers
-    install_editors_flatpak
-    install_docker
-    install_kubernetes
-    install_zinit
-    install_network_tools
-    install_flatpak
-}
-
-Test
-# Main script logic
-if [[ "$1" == "all" ]]; then
-    run_all_functions
-    exit 0
-fi
 
 # Main script loop
 while true; do
