@@ -213,10 +213,28 @@ install_editors_flatpak() {
 
         # Install Flatpak based on the package manager
         case "$PACKAGE_MANAGER" in
-        apt) sudo apt-get install -y -qq flatpak ;;
-        pacman) sudo pacman -S --noconfirm --quiet flatpak ;;
-        yum) sudo yum install -q -y flatpak ;;
-        dnf) sudo dnf install -q -y flatpak ;;
+        apt | apt-get)
+            # Add the PPA repository for Flatpak and install
+            sudo add-apt-repository -y ppa:flatpak/stable
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq flatpak
+            ;;
+        pacman)
+            # Arch/Manjaro
+            sudo pacman -S --noconfirm --quiet flatpak
+            ;;
+        yum)
+            # Rocky/CentOS (and other Red Hat-based)
+            sudo yum install -q -y flatpak
+            # Add Flathub repository for Yum-based systems
+            flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+            ;;
+        dnf)
+            # Fedora
+            sudo dnf install -q -y flatpak
+            # Add Flathub repository for Fedora
+            flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+            ;;
         esac
     fi
 
