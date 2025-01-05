@@ -15,7 +15,9 @@ RESET='\033[0m'
 
 # Detect package manager
 detect_package_manager() {
-    if command -v apt &>/dev/null; then
+    if command -v apt-get &>/dev/null; then
+        echo "apt-get"
+    elif command -v apt &>/dev/null; then
         echo "apt"
     elif command -v pacman &>/dev/null; then
         echo "pacman"
@@ -65,7 +67,7 @@ handle_menu_choice() {
     9) add_shell_aliases ;;
     10) install_flatpak ;;
     11)
-        echo -e "${GREEN}Exiting the script. Goodbye!${RESET}"
+        echo "Exiting the script. Goodbye!"
         exit 0
         ;;
     *) echo -e "${RED}Invalid choice. Please select a valid option.${RESET}" ;;
@@ -92,10 +94,14 @@ run_all_functions() {
 update_system() {
     echo "Updating system..."
     case "$PACKAGE_MANAGER" in
-    apt) sudo apt update -qq >/dev/null && sudo apt upgrade -y -qq >/dev/null ;;
+    apt|apt-get) sudo apt-get update -qq >/dev/null && sudo apt-get upgrade -y -qq >/dev/null ;;
     pacman) sudo pacman -Syu --noconfirm --quiet >/dev/null ;;
     yum) sudo yum update -q -y >/dev/null ;;
     dnf) sudo dnf upgrade --refresh -q -y >/dev/null ;;
+    *)
+        echo -e "${RED}Unsupported package manager. Could not update system.${RESET}"
+        exit 1
+        ;;
     esac
     echo -e "${GREEN}System updated.${RESET}"
 }
@@ -105,10 +111,14 @@ install_common_tools() {
     for tool in "${tools[@]}"; do
         echo "Installing $tool..."
         case "$PACKAGE_MANAGER" in
-        apt) sudo apt install -y -qq "$tool" >/dev/null ;;
+        apt|apt-get) sudo apt-get install -y -qq "$tool" >/dev/null ;;
         pacman) sudo pacman -S --noconfirm --quiet "$tool" >/dev/null ;;
         yum) sudo yum install -q -y "$tool" >/dev/null ;;
         dnf) sudo dnf install -q -y "$tool" >/dev/null ;;
+        *)
+            echo -e "${RED}Unsupported package manager. Could not install $tool.${RESET}"
+            exit 1
+            ;;
         esac
         echo -e "${GREEN}$tool installed.${RESET}"
     done
@@ -125,23 +135,29 @@ install_version_managers() {
 }
 
 install_editors_flatpak() {
-    echo "Installing editors using Flatpak..."
-    flatpak install -y -q flathub org.zed.Zed com.visualstudio.code org.wireshark.Wireshark >/dev/null
-    echo -e "${GREEN}Editors installed.${RESET}"
+    echo "Installing editors and tools using Flatpak..."
+    flatpak install -y -q flathub org.zed.Zed
+    flatpak install -y -q flathub com.visualstudio.code
+    flatpak install -y -q flathub org.wireshark.Wireshark
+    echo -e "${GREEN}Editors and tools installed via Flatpak.${RESET}"
 }
 
 install_docker() {
     echo "Installing Docker..."
     case "$PACKAGE_MANAGER" in
-    apt) sudo apt purge -y -qq docker docker.io containerd.io >/dev/null || true
-         sudo apt autoremove -y -qq >/dev/null || true
-         sudo apt install -y -qq docker.io >/dev/null ;;
+    apt|apt-get) sudo apt-get purge -y -qq docker docker.io containerd.io >/dev/null || true
+                 sudo apt-get autoremove -y -qq >/dev/null || true
+                 sudo apt-get install -y -qq docker.io >/dev/null ;;
     pacman) sudo pacman -Rns --noconfirm --quiet docker >/dev/null || true
             sudo pacman -S --noconfirm --quiet docker >/dev/null ;;
     yum) sudo yum remove -q -y docker docker-compose >/dev/null || true
          sudo yum install -q -y docker >/dev/null ;;
     dnf) sudo dnf remove -q -y docker docker-compose >/dev/null || true
          sudo dnf install -q -y docker >/dev/null ;;
+    *)
+        echo -e "${RED}Unsupported package manager. Could not install Docker.${RESET}"
+        exit 1
+        ;;
     esac
     sudo systemctl enable --now docker >/dev/null
     sudo usermod -aG docker "$USER"
@@ -151,10 +167,14 @@ install_docker() {
 install_kubernetes() {
     echo "Installing Kubernetes..."
     case "$PACKAGE_MANAGER" in
-    apt) sudo apt install -y -qq kubectl kubeadm kubelet >/dev/null ;;
+    apt|apt-get) sudo apt-get install -y -qq kubectl kubeadm kubelet >/dev/null ;;
     pacman) sudo pacman -S --noconfirm --quiet kubectl kubeadm kubelet >/dev/null ;;
     yum) sudo yum install -q -y kubectl kubeadm kubelet >/dev/null ;;
     dnf) sudo dnf install -q -y kubectl kubeadm kubelet >/dev/null ;;
+    *)
+        echo -e "${RED}Unsupported package manager. Could not install Kubernetes.${RESET}"
+        exit 1
+        ;;
     esac
     sudo systemctl enable --now kubelet >/dev/null
     echo -e "${GREEN}Kubernetes installed.${RESET}"
@@ -171,10 +191,14 @@ install_network_tools() {
     for tool in "${tools[@]}"; do
         echo "Installing $tool..."
         case "$PACKAGE_MANAGER" in
-        apt) sudo apt install -y -qq "$tool" >/dev/null ;;
+        apt|apt-get) sudo apt-get install -y -qq "$tool" >/dev/null ;;
         pacman) sudo pacman -S --noconfirm --quiet "$tool" >/dev/null ;;
         yum) sudo yum install -q -y "$tool" >/dev/null ;;
         dnf) sudo dnf install -q -y "$tool" >/dev/null ;;
+        *)
+            echo -e "${RED}Unsupported package manager. Could not install $tool.${RESET}"
+            exit 1
+            ;;
         esac
         echo -e "${GREEN}$tool installed.${RESET}"
     done
@@ -183,23 +207,34 @@ install_network_tools() {
 install_flatpak() {
     echo "Installing and enabling Flatpak..."
     case "$PACKAGE_MANAGER" in
-    apt) sudo apt install -y -qq flatpak >/dev/null ;;
+    apt|apt-get) sudo apt-get install -y -qq flatpak >/dev/null ;;
     pacman) sudo pacman -S --noconfirm --quiet flatpak >/dev/null ;;
     yum) sudo yum install -q -y flatpak >/dev/null ;;
     dnf) sudo dnf install -q -y flatpak >/dev/null ;;
+    *)
+        echo -e "${RED}Unsupported package manager. Could not install Flatpak.${RESET}"
+        exit 1
+        ;;
     esac
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo >/dev/null
     echo -e "${GREEN}Flatpak installed and enabled.${RESET}"
 }
 
 add_shell_aliases() {
-    echo "Adding aliases to shell configuration..."
+    echo "Adding aliases to ~/.zshrc..."
+    case "$PACKAGE_MANAGER" in
+    apt|apt-get) alias_update="sudo apt-get update" ; alias_install="sudo apt-get install -y" ;;
+    pacman) alias_update="sudo pacman -Syu" ; alias_install="sudo pacman -S --noconfirm" ;;
+    yum) alias_update="sudo yum update" ; alias_install="sudo yum install -y" ;;
+    dnf) alias_update="sudo dnf upgrade" ; alias_install="sudo dnf install -y" ;;
+    esac
     cat <<EOF >>~/.zshrc
-# Aliases added by script
-alias sysupdate='sudo ${PACKAGE_MANAGER} update'
-alias sysinstall='sudo ${PACKAGE_MANAGER} install'
+
+# Added by installation script
+alias sysupdate="$alias_update"
+alias sysinstall="$alias_install"
 EOF
-    echo -e "${GREEN}Aliases added to ~/.zshrc.${RESET}"
+    echo -e "${GREEN}Aliases added. Please reload your shell using 'source ~/.zshrc'.${RESET}"
 }
 
 # Main script logic
@@ -211,8 +246,6 @@ fi
 # Main script loop
 while true; do
     show_menu
-    read -p "Enter your choice(s) (space-separated for multiple options): " -a choices
-    for choice in "${choices[@]}"; do
-        handle_menu_choice "$choice"
-    done
+    read -p "Enter your choice: " choice
+    handle_menu_choice "$choice"
 done
