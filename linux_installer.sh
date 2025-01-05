@@ -204,20 +204,27 @@ install_network_tools() {
     done
 }
 
-install_flatpak() {
-    echo "Installing and enabling Flatpak..."
-    case "$PACKAGE_MANAGER" in
-    apt|apt-get) sudo apt-get install -y -qq flatpak >/dev/null ;;
-    pacman) sudo pacman -S --noconfirm --quiet flatpak >/dev/null ;;
-    yum) sudo yum install -q -y flatpak >/dev/null ;;
-    dnf) sudo dnf install -q -y flatpak >/dev/null ;;
-    *)
-        echo -e "${RED}Unsupported package manager. Could not install Flatpak.${RESET}"
-        exit 1
-        ;;
-    esac
-    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo >/dev/null
-    echo -e "${GREEN}Flatpak installed and enabled.${RESET}"
+install_editors_flatpak() {
+    echo "Installing editors and tools using Flatpak..."
+
+    # Check if flatpak is installed
+    if ! command -v flatpak &>/dev/null; then
+        echo -e "${YELLOW}Flatpak not found, installing Flatpak...${RESET}"
+
+        # Install Flatpak based on the package manager
+        case "$PACKAGE_MANAGER" in
+        apt) sudo apt-get install -y -qq flatpak ;;
+        pacman) sudo pacman -S --noconfirm --quiet flatpak ;;
+        yum) sudo yum install -q -y flatpak ;;
+        dnf) sudo dnf install -q -y flatpak ;;
+        esac
+    fi
+
+    # Now install the Flatpak tools
+    flatpak install -y -q flathub org.zed.Zed
+    flatpak install -y -q flathub com.visualstudio.code
+    flatpak install -y -q flathub org.wireshark.Wireshark
+    echo -e "${GREEN}Editors and tools installed via Flatpak.${RESET}"
 }
 
 add_shell_aliases() {
