@@ -3,10 +3,10 @@ name: Test Setup Scripts
 on:
   push:
     branches:
-      - '*'  # Trigger on push to any branch
+      - "master" # Trigger on push to any branch
   pull_request:
     branches:
-      - '*'  # Trigger on pull request to any branch
+      - "master" # Trigger on pull request to any branch
 
 jobs:
   test-arch:
@@ -19,7 +19,7 @@ jobs:
       - name: Arch Linux Container
         uses: addnab/docker-run-action@v3
         with:
-          image: manjarolinux/base:latest  # Use Manjaro as the Arch-based distro
+          image: manjarolinux/base:latest # Use Manjaro as the Arch-based distro
           options: --privileged
           run: |
             pacman -Syu --noconfirm && pacman -S --noconfirm sudo
@@ -35,7 +35,7 @@ jobs:
 
   test-debian:
     name: Debian Setup Script
-    runs-on: ubuntu-latest  # Use Ubuntu as the Debian-based distro
+    runs-on: ubuntu-latest # Use Ubuntu as the Debian-based distro
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -43,7 +43,7 @@ jobs:
       - name: Ubuntu Container
         uses: addnab/docker-run-action@v3
         with:
-          image: ubuntu:latest  # Use Ubuntu as the Debian-based distro
+          image: ubuntu:latest # Use Ubuntu as the Debian-based distro
           options: --privileged
           run: |
             apt update && apt install -y sudo
@@ -67,7 +67,7 @@ jobs:
       - name: Rocky Linux Container
         uses: addnab/docker-run-action@v3
         with:
-          image: rockylinux/rockylinux:latest  # Use Rocky Linux as the distro
+          image: rockylinux/rockylinux:latest # Use Rocky Linux as the distro
           options: --privileged
           run: |
             yum update -y && yum install -y sudo
@@ -91,7 +91,7 @@ jobs:
       - name: Fedora Container
         uses: addnab/docker-run-action@v3
         with:
-          image: fedora:latest  # Use Fedora as the distro
+          image: fedora:latest # Use Fedora as the distro
           options: --privileged
           run: |
             dnf update -y && dnf install -y sudo
