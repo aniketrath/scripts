@@ -5,7 +5,7 @@
 
 ```bash
   git clone https://github.com/aniketrath/scripts.git;
-  cd cripts;
+  cd scripts;
   chmod 700 linux_installer.sh
   sudo ./linux_installer.sh
 ```
@@ -17,7 +17,7 @@
 
 ```bash
     git clone https://github.com/aniketrath/scripts.git;
-    cd cripts;
+    cd scripts;
     mv ~/.zshrc ~/.zshrc.bak
     cp .zshrc ~/.zshrc
     source ~/.zshrc
@@ -47,7 +47,7 @@ Clone the repo and copy to the location of your choice :
 
 ```bash
     git clone https://github.com/aniketrath/scripts.git;
-    cd cripts;
+    cd scripts;
     mv ~/.zshrc ~/.zshrc.bak
     cp .tmux.conf < the locaation u need >
 ```
