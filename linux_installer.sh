@@ -2,7 +2,7 @@
 
 # Check if the script is run as root
 if [ "$(id -u)" -ne 0 ]; then
-    echo "This script needs to be run as root (use )."
+    echo "This script needs to be run as root (use sudo)."
     exit 1
 fi
 
@@ -36,6 +36,26 @@ if [ "$PACKAGE_MANAGER" == "unsupported" ]; then
     echo -e "${RED}Unsupported Linux distribution. Exiting.${RESET}"
     exit 1
 fi
+
+# Pre-check function to install required dependencies like apt-utils, curl, wget, etc.
+install_dependencies() {
+    local dependencies=("apt-utils" "curl" "wget" "git" "zsh" "flatpak")
+
+    echo -e "${YELLOW}Checking for missing dependencies...${RESET}"
+    for dep in "${dependencies[@]}"; do
+        if ! command -v "$dep" &>/dev/null; then
+            echo -e "${YELLOW}$dep not found. Installing...${RESET}"
+            case "$PACKAGE_MANAGER" in
+            apt|apt-get) apt-get install -y -qq "$dep" >/dev/null ;;
+            pacman) pacman -S --noconfirm --quiet "$dep" >/dev/null ;;
+            yum) yum install -q -y "$dep" >/dev/null ;;
+            dnf) dnf install -q -y "$dep" >/dev/null ;;
+            *) echo -e "${RED}Unsupported package manager. Could not install $dep.${RESET}" ;;
+            esac
+            echo -e "${GREEN}$dep installed.${RESET}"
+        fi
+    done
+}
 
 # Function to display the main menu
 show_menu() {
@@ -85,7 +105,6 @@ run_all_functions() {
     install_kubernetes
     install_zinit
     install_network_tools
-    install_editors_flatpak
     add_shell_aliases
     echo -e "${GREEN}All tasks completed successfully.${RESET}"
 }
@@ -135,6 +154,12 @@ install_version_managers() {
 }
 
 install_editors_flatpak() {
+    # Check if Flatpak is installed, if not install it
+    if ! command -v flatpak &>/dev/null; then
+        echo -e "${YELLOW}Flatpak not found, installing Flatpak...${RESET}"
+        install_flatpak
+    fi
+
     echo "Installing editors and tools using Flatpak..."
     flatpak install -y -q flathub org.zed.Zed
     flatpak install -y -q flathub com.visualstudio.code
@@ -217,47 +242,6 @@ install_network_tools() {
     done
 }
 
-install_editors_flatpak() {
-    echo "Installing editors and tools using Flatpak..."
-
-    # Check if flatpak is installed
-    if ! command -v flatpak &>/dev/null; then
-        echo -e "${YELLOW}Flatpak not found, installing Flatpak...${RESET}"
-
-        # Install Flatpak based on the package manager
-        case "$PACKAGE_MANAGER" in
-        apt | apt-get)
-            # Add the PPA repository for Flatpak and install
-             add-apt-repository -y ppa:flatpak/stable >/dev/null 2>&1
-             apt-get update -qq >/dev/null 2>&1
-             apt-get install -y flatpak >/dev/null 2>&1
-            ;;
-        pacman)
-            # Arch/Manjaro
-             pacman -S --noconfirm --quiet flatpak >/dev/null 2>&1
-            ;;
-        yum)
-            # Rocky/CentOS (and other Red Hat-based)
-             yum install -q -y flatpak >/dev/null 2>&1
-            # Add Flathub repository for Yum-based systems
-            flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo >/dev/null 2>&1
-            ;;
-        dnf)
-            # Fedora
-             dnf install -q -y flatpak >/dev/null 2>&1
-            # Add Flathub repository for Fedora
-            flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo >/dev/null 2>&1
-            ;;
-        esac
-    fi
-
-    # Now install the Flatpak tools
-    flatpak install -y -q flathub org.zed.Zed >/dev/null 2>&1
-    flatpak install -y -q flathub com.visualstudio.code >/dev/null 2>&1
-    flatpak install -y -q flathub org.wireshark.Wireshark >/dev/null 2>&1
-    echo -e "${GREEN}Editors and tools installed via Flatpak.${RESET}"
-}
-
 add_shell_aliases() {
     echo "Adding aliases to ~/.zshrc..."
     case "$PACKAGE_MANAGER" in
@@ -277,12 +261,14 @@ EOF
 
 # Main script logic
 if [[ "$1" == "all" ]]; then
+    install_dependencies
     run_all_functions
     exit 0
 fi
 
 # Main script loop
 while true; do
+    install_dependencies
     show_menu
     read -p "Enter your choice: " choice
     handle_menu_choice "$choice"
