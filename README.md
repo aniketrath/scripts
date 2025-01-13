@@ -4,10 +4,10 @@
 ### debian_setup.sh
 
 ```bash
-  git clone https://github.com/aniketrath/sys_scripts.git;
-  cd sys_scripts;
-  chmod 700 sys_scripts
-  sudo ./sys_scripts
+  git clone https://github.com/aniketrath/scripts.git;
+  cd cripts;
+  chmod 700 linux_installer.sh
+  sudo ./linux_installer.sh
 ```
 
 ### zshrc
@@ -16,8 +16,8 @@
 #### NOTE : These will need a Code-Font . Please Install before running it as it might leas to non-readable characters in ASCII
 
 ```bash
-    git clone https://github.com/aniketrath/sys_scripts.git;
-    cd sys_scripts;
+    git clone https://github.com/aniketrath/scripts.git;
+    cd cripts;
     mv ~/.zshrc ~/.zshrc.bak
     cp .zshrc ~/.zshrc
     source ~/.zshrc
@@ -46,8 +46,8 @@ or
 Clone the repo and copy to the location of your choice :
 
 ```bash
-    git clone https://github.com/aniketrath/sys_scripts.git;
-    cd sys_scripts;
+    git clone https://github.com/aniketrath/scripts.git;
+    cd cripts;
     mv ~/.zshrc ~/.zshrc.bak
     cp .tmux.conf < the locaation u need >
 ```
