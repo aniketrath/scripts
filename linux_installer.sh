@@ -22,7 +22,7 @@ animated_text_dependencies() {
     fi
 }
 
-# Animated Test
+# Animated Text
 ascii_animate() {
     local input_text="$1"  # Get the text passed as an argument
     figlet -f "./fonts/Bloody.flf" -w 200 "$input_text"
@@ -116,11 +116,107 @@ install_docker_desktop() {
     echo -e "${YELLOW}System : Docker Desktop setup complete! ${RESET}"
 }
 
+install_kubernetes() {
+
+    echo -e "${YELLOW}System : Installing Kubernetes${RESET}"
+
+    # Update system package list and install prerequisites
+    system_patch
+    apt-get install -y apt-transport-https ca-certificates curl gnupg &> /dev/null
+    if [[ $? -ne 0 ]]; then
+        echo -e "${RED}System : Failed to install prerequisites. Exiting.${RESET}"
+        return 1
+    fi
+
+    # Add Kubernetes apt key
+    echo -e "${YELLOW}System : Adding Kubernetes APT key${RESET}"
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    if [[ $? -ne 0 ]]; then
+        echo -e "${RED}System : Failed to add Kubernetes APT key. Exiting.${RESET}"
+        return 1
+    fi
+    chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+    # Add Kubernetes apt repository
+    echo -e "${YELLOW}System : Adding Kubernetes APT repository${RESET}"
+    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list &> /dev/null
+    chmod 644 /etc/apt/sources.list.d/kubernetes.list
+
+    # Update package list again
+    system_patch
+
+    # Install kubectl
+    echo -e "${YELLOW}System : Installing kubectl${RESET}"
+    apt-get install -y kubectl &> /dev/null
+    if [[ $? -ne 0 ]]; then
+        echo -e "${RED}System : Failed to install kubectl. Exiting.${RESET}"
+        return 1
+    fi
+
+    echo -e "${GREEN}System : Kubernetes (kubectl) Installed Successfully!${RESET}"
+}
+
+setup_device() {
+    echo -e "${BLUE}System : Setting Up as a New Device ${RESET}\n"
+    echo -e "${BLUE}System : All the packages and tools offered in this script will be installed. ${RESET}\n"
+    system_patch
+    install_base_package
+    install_docker_desktop
+    install_kubernetes
+}
+
+# Parse Flags Function
+parse_flags() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --setup-device)
+                setup_device
+                ;;
+            --patch-system)
+                system_patch
+                ;;
+            --install-docker)
+                install_docker_desktop
+                ;;
+            --install-kubernetes)
+                install_kubernetes
+                ;;
+            --install-base-packages)
+                install_base_package
+                ;;
+            --help|-h)
+                echo "Usage: $0 [OPTIONS]"
+                echo ""
+                echo "Available options:"
+                echo "  --setup-device          Run device setup"
+                echo "  --patch-system          Update and upgrade all packages"
+                echo "  --install-docker        Install Docker Engine and Desktop"
+                echo "  --install-kubernetes    Install Kubernetes (kubectl)"
+                echo "  --install-base-packages Install required base packages"
+                echo "  --help, -h              Display this help message"
+                exit 0
+                ;;
+            *)
+                echo "Invalid option: $1"
+                echo "Use --help to see available options."
+                exit 1
+                ;;
+        esac
+        shift # Move to the next argument
+    done
+}
+
 
 # Main Function
 main() {
     animated_text_dependencies
     ascii_animate "H E L L O"
+
+    # If script is run with arguments (flags)
+    if [[ $# -gt 0 ]]; then
+        parse_flags "$@"
+        exit 0
+    fi
 
     local OPTIONS=(
         "Patch the System [ Update all the packages ]"
@@ -128,6 +224,7 @@ main() {
         "Install Docker Engine"
         "Install Kubernetes"
         "Set Aliases"
+        "Set up the System"
     )
 
     PS3="Choose an option: "
@@ -136,9 +233,10 @@ main() {
         case $REPLY in
             1) system_patch ; break ;;
             2) install_base_package ; break ;;
-            3) echo "You chose: $CHOICE"; break ;;
-            4) echo "You chose: $CHOICE"; break ;;
+            3) install_docker_desktop ; break ;;
+            4) install_kubernetes ; break ;;
             5) echo "You chose: $CHOICE"; break ;;
+            6) esetup_device ; break ;;
             *) echo "Invalid choice. Try again."; ;;
         esac
     done
