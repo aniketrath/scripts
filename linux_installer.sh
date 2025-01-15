@@ -21,6 +21,7 @@ animated_text_dependencies() {
         echo "Done Installing"
     fi
 }
+
 # Animated Test
 ascii_animate() {
     local input_text="$1"  # Get the text passed as an argument
@@ -35,7 +36,9 @@ install_base_package() {
     "curl" 
     "git" 
     "vim" 
-    "glances")
+    "glances"
+    "eza"
+    "bat")
     
     # Display the list of packages in blue
     echo -e "${BLUE}The following packages will be installed:${RESET}"
@@ -56,7 +59,6 @@ install_base_package() {
     echo -e "\n${GREEN}System: All Packages Installed Successfully${RESET}\n"
 }
 
-
 # Function to patch the system
 system_patch() {
     echo -e "${YELLOW}System : Updating Packages ${RESET}"
@@ -64,6 +66,56 @@ system_patch() {
     apt-get upgrade -y &> /dev/null
     echo -e "${GREEN}System : Updates Installed${GREEN}"
 }
+
+install_docker_desktop() {
+    echo -e "${YELLOW}System : Setting up Docker: Desktop ${RESET}"
+    
+    # Install required tools
+    echo -e "${YELLOW}System : Installing prerequisites ${RESET}"
+    apt-get update -y &> /dev/null
+    apt-get install -y gnome-terminal ca-certificates curl &> /dev/null
+
+    # Add Docker's official GPG key
+    echo -e "${YELLOW}System : Adding Docker's GPG key ${RESET}"
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
+
+    # Add the repository to Apt sources
+    echo -e "${YELLOW}System : Adding Docker's repository ${RESET}"
+    echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null
+    apt-get update -y &> /dev/null
+
+    # Define URL and output file
+    local url="https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-linux-amd64"
+    local deb_file="docker-desktop-amd64.deb"
+
+    # Download the .deb file
+    echo -e "${YELLOW}System : Downloading Docker: Desktop ${RESET}"
+    wget -O "$deb_file" "$url"
+    if [[ $? -ne 0 ]]; then
+        echo -e "${RED}System : Failed to download Docker Desktop. Exiting ${RESET}"
+        return 1
+    fi
+
+    # Install the .deb package
+    echo -e "${YELLOW}System : Installing Docker: Desktop ${RESET}"
+    dpkg -i "$deb_file" &> /dev/null
+    if [[ $? -ne 0 ]]; then
+        echo -e "${RED}System : dpkg encountered an issue, fixing dependencies ${RESET}"
+        apt-get install -f -y
+    fi
+
+    # Cleanup
+    echo -e "${YELLOW}System : Cleaning up ${RESET}"
+    rm -f "$deb_file"
+
+    echo -e "${YELLOW}System : Docker Desktop setup complete! ${RESET}"
+}
+
 
 # Main Function
 main() {
