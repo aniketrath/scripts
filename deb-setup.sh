@@ -179,6 +179,9 @@ add_aliases() {
         ["install"]="sudo apt-get install -y"
         ["remove"]="sudo apt-get purge -y"
         ["clean"]="sudo apt-get autoclean -y"
+        ["ls"]="eza"
+        ["ll"]="eza -lah"
+        ["cat"]="batcat"
     )
 
     # Loop through aliases and add them

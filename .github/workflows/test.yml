@@ -1,20 +1,33 @@
 name: Setup and Install
+
 on:
   push:
     branches:
-      - master 
+      - master
   pull_request:
     branches:
       - master
+
 jobs:
   setup:
     runs-on: ubuntu-latest
+
     steps:
       # Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v2
+
       # Install dependencies and run the script
       - name: Install dependencies and run setup script
         run: |
           chmod +x ./deb-setup.sh
-          sudo ./deb-setup.sh --setup-device 
+          sudo ./deb-setup.sh --setup-device
+
+      # Auto-merge the pull request if the job passes
+      - name: Auto-merge pull request
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        run: |
+          gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
+          gh pr merge ${{ github.event.pull_request.number }} --merge --auto --squash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
