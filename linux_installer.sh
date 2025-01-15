@@ -28,7 +28,7 @@ ascii_animate() {
     figlet -f "./fonts/Bloody.flf" -w 200 "$input_text"
 }
 
-# Function to install base packages
+# Install base packages
 install_base_package() {
     local packages=("wget" "curl" "git" "vim" "glances" "eza" "bat")
 
@@ -50,7 +50,7 @@ install_base_package() {
     echo -e "\n${GREEN}System: All Packages Installed Successfully${RESET}\n"
 }
 
-# Function to patch the system
+# System Patching
 system_patch() {
     echo -e "${YELLOW}System: Updating Packages${RESET}"
     apt-get update &> /dev/null
@@ -58,6 +58,7 @@ system_patch() {
     echo -e "${GREEN}System: Updates Installed${RESET}"
 }
 
+# Docker installation
 install_docker_desktop() {
     echo -e "${YELLOW}System : Setting up Docker: Desktop ${RESET}"
     
@@ -97,7 +98,7 @@ install_docker_desktop() {
     dpkg -i "$deb_file" &> /dev/null
     if [[ $? -ne 0 ]]; then
         echo -e "${RED}System : dpkg encountered an issue, fixing dependencies ${RESET}"
-        apt-get install -f -y
+        apt-get install -f -y &> /dev/null
     fi
 
     # Cleanup
@@ -107,6 +108,7 @@ install_docker_desktop() {
     echo -e "${YELLOW}System : Docker Desktop setup complete! ${RESET}"
 }
 
+# Kubernetes installation
 install_kubernetes() {
 
     echo -e "${YELLOW}System : Installing Kubernetes${RESET}"
@@ -147,6 +149,7 @@ install_kubernetes() {
     echo -e "${GREEN}System : Kubernetes (kubectl) Installed Successfully!${RESET}"
 }
 
+# New Device Setup : All installs 
 setup_device() {
     echo -e "${BLUE}System : Setting Up as a New Device ${RESET}\n"
     echo -e "${BLUE}System : All the packages and tools offered in this script will be installed. ${RESET}\n"
@@ -156,6 +159,46 @@ setup_device() {
     install_kubernetes
 }
 
+#Setting up aliases
+add_aliases() {
+
+    local shell_rc
+    # Detect whether the user is using bash or zsh
+    if [[ -n "$ZSH_VERSION" ]]; then
+        shell_rc="$HOME/.zshrc"
+    else
+        shell_rc="$HOME/.bashrc"
+    fi
+
+    echo -e "${YELLOW}System: Adding aliases to $shell_rc${RESET}"
+
+    # List of aliases to add
+    declare -A aliases=(
+        ["update"]="sudo apt-get update && sudo apt-get upgrade -y"
+        ["install"]="sudo apt-get install -y"
+        ["remove"]="sudo apt-get purge -y"
+        ["clean"]="sudo apt-get autoclean -y"
+    )
+
+    # Loop through aliases and add them
+    for alias_name in "${!aliases[@]}"; do
+        local alias_cmd="alias $alias_name='${aliases[$alias_name]}'"
+
+        # Check if the alias is already present
+        if grep -q "$alias_cmd" "$shell_rc"; then
+            echo -e "${BLUE}Alias '$alias_name' already exists in $shell_rc${RESET}"
+        else
+            echo "$alias_cmd" >> "$shell_rc"
+            echo -e "${GREEN}Alias '$alias_name' added to $shell_rc${RESET}"
+        fi
+    done
+
+    # Source the updated shell configuration file
+    echo -e "${YELLOW}System: Reloading shell configuration${RESET}"
+    source "$shell_rc"
+
+    echo -e "${GREEN}System: All aliases have been added and are now available.${RESET}"
+}
 
 # Parse Flags Function
 parse_flags() {
@@ -179,6 +222,10 @@ parse_flags() {
                 ;;
             --install-base-packages)
                 install_base_package
+                exit 0
+                ;;
+            --set-alias)
+                add_aliases
                 exit 0
                 ;;
             --help|-h)
@@ -230,7 +277,7 @@ main() {
             2) install_base_package ; break ;;
             3) install_docker_desktop ; break ;;
             4) install_kubernetes ; break ;;
-            5) echo "You chose: $CHOICE"; break ;;
+            5) add_aliases ; break ;;
             6) setup_device ; break ;;  # Corrected typo here
             *) echo "Invalid choice. Try again." ;;
         esac
