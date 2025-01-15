@@ -16,5 +16,5 @@ jobs:
       # Install dependencies and run the script
       - name: Install dependencies and run setup script
         run: |
-          chmod +x ./deb-sh.sh
+          chmod +x ./deb-setup.sh
           sudo ./deb-setup.sh --setup-device 
