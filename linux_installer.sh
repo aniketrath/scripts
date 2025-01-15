@@ -15,8 +15,8 @@ RESET='\033[0m'
 # Function to check and install figlet if not installed
 animated_text_dependencies() {
     if ! command -v figlet &> /dev/null; then
-        echo "Installing something Cool !"
-        apt-get update &> /dev/null && apt-get install -y figlet&> /dev/null
+        echo "Installing something Cool!"
+        apt-get update &> /dev/null && apt-get install -y figlet &> /dev/null
     else
         echo "Done Installing"
     fi
@@ -24,32 +24,23 @@ animated_text_dependencies() {
 
 # Animated Text
 ascii_animate() {
-    local input_text="$1"  # Get the text passed as an argument
+    local input_text="$1"
     figlet -f "./fonts/Bloody.flf" -w 200 "$input_text"
 }
 
 # Function to install base packages
 install_base_package() {
+    local packages=("wget" "curl" "git" "vim" "glances" "eza" "bat")
 
-    # List of packages to install
-    local packages=("wget" 
-    "curl" 
-    "git" 
-    "vim" 
-    "glances"
-    "eza"
-    "bat")
-    
-    # Display the list of packages in blue
     echo -e "${BLUE}The following packages will be installed:${RESET}"
     for package in "${packages[@]}"; do
         echo -e "${BLUE}$package${RESET}"
     done
-    echo -e "${YELLOW}System: Installing Packages ${RESET}\n"
-    # Loop through the packages and install them
+    echo -e "${YELLOW}System: Installing Packages${RESET}\n"
+
     for package in "${packages[@]}"; do
         if ! dpkg -l | grep -q "${package}"; then
-            echo -e "${YELLOW}System: Installing ${package} ${RESET}"
+            echo -e "${YELLOW}System: Installing ${package}${RESET}"
             apt-get install -y "${package}" &> /dev/null
             echo -e "${GREEN}System: ${package} Installed${RESET}"
         else
@@ -61,10 +52,10 @@ install_base_package() {
 
 # Function to patch the system
 system_patch() {
-    echo -e "${YELLOW}System : Updating Packages ${RESET}"
-    apt-get update &> /dev/null 
+    echo -e "${YELLOW}System: Updating Packages${RESET}"
+    apt-get update &> /dev/null
     apt-get upgrade -y &> /dev/null
-    echo -e "${GREEN}System : Updates Installed${GREEN}"
+    echo -e "${GREEN}System: Updates Installed${RESET}"
 }
 
 install_docker_desktop() {
@@ -165,24 +156,30 @@ setup_device() {
     install_kubernetes
 }
 
+
 # Parse Flags Function
 parse_flags() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             --setup-device)
                 setup_device
+                exit 0
                 ;;
             --patch-system)
                 system_patch
+                exit 0
                 ;;
             --install-docker)
                 install_docker_desktop
+                exit 0
                 ;;
             --install-kubernetes)
                 install_kubernetes
+                exit 0
                 ;;
             --install-base-packages)
                 install_base_package
+                exit 0
                 ;;
             --help|-h)
                 echo "Usage: $0 [OPTIONS]"
@@ -202,17 +199,15 @@ parse_flags() {
                 exit 1
                 ;;
         esac
-        shift # Move to the next argument
+        shift
     done
 }
-
 
 # Main Function
 main() {
     animated_text_dependencies
     ascii_animate "H E L L O"
 
-    # If script is run with arguments (flags)
     if [[ $# -gt 0 ]]; then
         parse_flags "$@"
         exit 0
@@ -236,11 +231,11 @@ main() {
             3) install_docker_desktop ; break ;;
             4) install_kubernetes ; break ;;
             5) echo "You chose: $CHOICE"; break ;;
-            6) esetup_device ; break ;;
-            *) echo "Invalid choice. Try again."; ;;
+            6) setup_device ; break ;;  # Corrected typo here
+            *) echo "Invalid choice. Try again." ;;
         esac
     done
 }
 
-# Call the function
-main
+# Call the main function
+main "$@"
