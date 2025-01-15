@@ -1,13 +1,12 @@
 
 ## Deployment
 
-### debian_setup.sh
+### deb-setup.sh
 
 ```bash
   git clone https://github.com/aniketrath/scripts.git;
   cd scripts;
-  chmod 700 linux_installer.sh
-  sudo ./linux_installer.sh
+  sudo ./deb-setup.sh
 ```
 
 ### zshrc

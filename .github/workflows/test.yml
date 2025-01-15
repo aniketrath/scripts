@@ -1,105 +1,33 @@
-name: Test Setup Scripts
+name: Setup and Install
 
 on:
   push:
     branches:
-      - "master" # Trigger on push to any branch
+      - master
   pull_request:
     branches:
-      - "master" # Trigger on pull request to any branch
+      - master
 
 jobs:
-  test-arch:
-    name: Test Arch Setup Script
+  setup:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Arch Linux Container
-        uses: addnab/docker-run-action@v3
-        with:
-          image: manjarolinux/base:latest # Use Manjaro as the Arch-based distro
-          options: --privileged
-          run: |
-            pacman -Syu --noconfirm && pacman -S --noconfirm sudo
-            useradd -m github
-            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
-            chmod 0440 /etc/sudoers.d/github
-            su - github
-      - name: Run Arch Setup Script
+      # Install dependencies and run the script
+      - name: Install dependencies and run setup script
         run: |
-          chmod +700 ./linux_installer.sh
-          sudo ./linux_installer.sh all
-        shell: bash
+          chmod +x ./deb-setup.sh
+          sudo ./deb-setup.sh --setup-device
 
-  test-debian:
-    name: Debian Setup Script
-    runs-on: ubuntu-latest # Use Ubuntu as the Debian-based distro
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Ubuntu Container
-        uses: addnab/docker-run-action@v3
-        with:
-          image: ubuntu:latest # Use Ubuntu as the Debian-based distro
-          options: --privileged
-          run: |
-            apt update && apt install -y sudo
-            useradd -m github
-            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
-            chmod 0440 /etc/sudoers.d/github
-            su - github
-      - name: Run Debian Setup Script
+      # Auto-merge the pull request if the job passes
+      - name: Auto-merge pull request
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
         run: |
-          chmod +700 ./linux_installer.sh
-          sudo ./linux_installer.sh all
-        shell: bash
-
-  test-rocky:
-    name: Rocky Linux Setup Script
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Rocky Linux Container
-        uses: addnab/docker-run-action@v3
-        with:
-          image: rockylinux/rockylinux:latest # Use Rocky Linux as the distro
-          options: --privileged
-          run: |
-            yum update -y && yum install -y sudo
-            useradd -m github
-            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
-            chmod 0440 /etc/sudoers.d/github
-            su - github
-      - name: Run Rocky Linux Setup Script
-        run: |
-          chmod +700 ./linux_installer.sh
-          sudo ./linux_installer.sh all
-        shell: bash
-
-  test-fedora:
-    name: Fedora Setup Script
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Fedora Container
-        uses: addnab/docker-run-action@v3
-        with:
-          image: fedora:latest # Use Fedora as the distro
-          options: --privileged
-          run: |
-            dnf update -y && dnf install -y sudo
-            useradd -m github
-            echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
-            chmod 0440 /etc/sudoers.d/github
-      - name: Run Fedora Setup Script
-        run: |
-          chmod +700 ./linux_installer.sh
-          sudo ./linux_installer.sh all
-        shell: bash
+          gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
+          gh pr merge ${{ github.event.pull_request.number }} --merge --auto --squash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
