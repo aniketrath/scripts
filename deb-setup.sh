@@ -87,7 +87,7 @@ install_docker_desktop() {
 
     # Download the .deb file
     echo -e "${YELLOW}System : Downloading Docker: Desktop ${RESET}"
-    wget -O "$deb_file" "$url"
+    wget -O "$deb_file" "$url" > /dev/null 2>&1
     if [[ $? -ne 0 ]]; then
         echo -e "${RED}System : Failed to download Docker Desktop. Exiting ${RESET}"
         return 1
