@@ -123,7 +123,7 @@ install_kubernetes() {
 
     # Add Kubernetes apt key
     echo -e "${YELLOW}System : Adding Kubernetes APT key${RESET}"
-    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | gpg --no-tty --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
     if [[ $? -ne 0 ]]; then
         echo -e "${RED}System : Failed to add Kubernetes APT key. Exiting.${RESET}"
         return 1
