@@ -105,7 +105,7 @@ install_docker_desktop() {
     echo -e "${YELLOW}System : Cleaning up ${RESET}"
     rm -f "$deb_file"
 
-    echo -e "${YELLOW}System : Docker Desktop setup complete! ${RESET}"
+    echo -e "${GREEN}System : Docker Desktop setup complete! ${RESET}"
 }
 
 # Kubernetes installation
@@ -157,6 +157,7 @@ setup_device() {
     install_base_package
     install_docker_desktop
     install_kubernetes
+    add_aliases
 }
 
 #Setting up aliases
