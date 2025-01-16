@@ -184,7 +184,7 @@ install_docker_desktop() {
 
     # Install the .deb package
     echo -e "${YELLOW}System : Installing Docker: Desktop ${RESET}"
-    dpkg -i "$deb_file" &> /dev/null
+    apt-get install -y ./"$deb_file" &> /dev/null
     if [[ $? -ne 0 ]]; then
         echo -e "${RED}System : dpkg encountered an issue, fixing dependencies ${RESET}"
         apt-get install -f -y &> /dev/null
