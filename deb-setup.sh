@@ -30,32 +30,121 @@ ascii_animate() {
 
 # Install base packages
 install_base_package() {
-    local packages=("wget" "curl" "git" "vim" "glances" "eza" "bat")
+    local packages=(
+    "wget" 
+    "curl" 
+    "git" 
+    "vim" 
+    "glances" 
+    "eza" 
+    "bat"
+    "gnome-tweaks"
+    "gnome-shell-extensions"
+    "github-desktop"
+    )
+
+    wget -qO - https://apt.packages.shiftkey.dev/gpg.key | gpg --dearmor | tee /usr/share/keyrings/shiftkey-packages.gpg > /dev/null
+    sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/shiftkey-packages.gpg] https://apt.packages.shiftkey.dev/ubuntu/ any main" > /etc/apt/sources.list.d/shiftkey-packages.list'
+    system_patch
 
     echo -e "${BLUE}The following packages will be installed:${RESET}"
+
     for package in "${packages[@]}"; do
         echo -e "${BLUE}$package${RESET}"
     done
-    echo -e "${YELLOW}System: Installing Packages${RESET}\n"
+    echo -e "${YELLOW}System : Installing Packages${RESET}\n"
 
     for package in "${packages[@]}"; do
-        if ! dpkg -l | grep -q "${package}"; then
-            echo -e "${YELLOW}System: Installing ${package}${RESET}"
-            apt-get install -y "${package}" &> /dev/null
-            echo -e "${GREEN}System: ${package} Installed${RESET}"
-        else
-            echo -e "${GREEN}System: ${package} Already Installed${RESET}"
-        fi
+        echo -e "${YELLOW}System : Installing ${package}${RESET}"
+        apt-get install -y "${package}" &> /dev/null
+        echo -e "${GREEN}System : ${package} Installed${RESET}"
     done
-    echo -e "\n${GREEN}System: All Packages Installed Successfully${RESET}\n"
+    echo -e "\n${GREEN}System : All Packages Installed Successfully${RESET}\n"
+
+}
+
+# Install All the .deb Files
+install_extra_packages() {
+
+    # Declare the associative array within the function
+    declare -A list=(
+        ["warp"]="https://app.warp.dev/download?package=deb"  
+        ["vs-code"]="https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"  
+    )
+
+    for package in "${!list[@]}"; do
+        local download_link="${list[$package]}"
+        local file_name="${package}.deb"  # Save the file as <package>.deb
+
+        echo -e "${BLUE}Downloading $package from $download_link...${RESET}"
+
+        curl -L -o "$file_name" "$download_link" &> /dev/null
+        if [[ $? -eq 0 ]]; then
+            echo -e "${GREEN}Download complete. Installing $package...${RESET}"
+
+            apt-get install -y ./"$file_name" &> /dev/null
+            if [[ $? -ne 0 ]]; then
+                echo -e "${RED}Encountered errors during installation of $package. Fixing dependencies...${RESET}"
+                apt-get -f install -y &> /dev/null
+                if [[ $? -eq 0 ]]; then
+                    echo -e "${GREEN}$package installed successfully after fixing dependencies.${RESET}"
+                else
+                    echo -e "${RED}Failed to fix dependencies for $package. Manual intervention required.${RESET}"
+                fi
+            else
+                echo -e "${GREEN}$package installed successfully.${RESET}"
+            fi
+        else
+            echo -e "${RED}Failed to download $package.${RESET}"
+        fi
+        # Cleanup downloaded file
+        rm -f "$file_name"
+    done
+}
+
+# Installing Jenkins Server
+install_jenkins_service() {
+
+    echo -e "${YELLOW}System: Setting Up Jenkins${RESET}"
+    echo -e "${BLUE}System: Setting Up Dependencies${RESET}"
+
+    apt-get install -y fontconfig openjdk-17-jre &> /dev/null
+    if [[ $? -ne 0 ]]; then
+        echo -e "${RED}Error: Failed to install dependencies. Check your internet connection or package manager.${RESET}"
+        return 1
+    fi
+
+    echo -e "${BLUE}System: Setting Up PPA and Keys${RESET}"
+
+    wget -O /usr/share/keyrings/jenkins-keyring.asc \
+        https://pkg.jenkins.io/debian/jenkins.io-2023.key &> /dev/null
+    if [[ $? -ne 0 ]]; then
+        echo -e "${RED}Error: Failed to download Jenkins key. Check your internet connection.${RESET}"
+        return 1
+    fi
+
+    echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian binary/" | \
+        tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+    echo -e "${BLUE}System: Updating package list${RESET}"
+    apt-get update &> /dev/null
+
+    echo -e "${YELLOW}System: Installing Jenkins Service${RESET}"
+    apt-get install -y jenkins &> /dev/null
+    if [[ $? -eq 0 ]]; then
+        echo -e "\n${GREEN}System: Jenkins Installed Successfully${RESET}\n"
+    else
+        echo -e "\n${RED}System: Failed to install Jenkins. Check for issues manually.${RESET}\n"
+        return 1
+    fi
 }
 
 # System Patching
 system_patch() {
-    echo -e "${YELLOW}System: Updating Packages${RESET}"
+    echo -e "${YELLOW}System : Updating Packages${RESET}"
     apt-get update &> /dev/null
     apt-get upgrade -y &> /dev/null
-    echo -e "${GREEN}System: Updates Installed${RESET}"
+    echo -e "${GREEN}System : Updates Installed${RESET}"
 }
 
 # Docker installation
@@ -95,7 +184,7 @@ install_docker_desktop() {
 
     # Install the .deb package
     echo -e "${YELLOW}System : Installing Docker: Desktop ${RESET}"
-    dpkg -i "$deb_file" &> /dev/null
+    apt-get install -y ./"$deb_file" &> /dev/null
     if [[ $? -ne 0 ]]; then
         echo -e "${RED}System : dpkg encountered an issue, fixing dependencies ${RESET}"
         apt-get install -f -y &> /dev/null
@@ -155,6 +244,8 @@ setup_device() {
     echo -e "${BLUE}System : All the packages and tools offered in this script will be installed. ${RESET}\n"
     system_patch
     install_base_package
+    install_extra_packages
+    install_jenkins_service
     install_docker_desktop
     install_kubernetes
     add_aliases
@@ -171,7 +262,7 @@ add_aliases() {
         shell_rc="$HOME/.bashrc"
     fi
 
-    echo -e "${YELLOW}System: Adding aliases to $shell_rc${RESET}"
+    echo -e "${YELLOW}System : Adding aliases to $shell_rc${RESET}"
 
     # List of aliases to add
     declare -A aliases=(
@@ -198,21 +289,21 @@ add_aliases() {
     done
 
     # Source the updated shell configuration file
-    echo -e "${YELLOW}System: Reloading shell configuration${RESET}"
+    echo -e "${YELLOW}System : Reloading shell configuration${RESET}"
     source "$shell_rc"
 
-    echo -e "${GREEN}System: All aliases have been added and are now available.${RESET}"
+    echo -e "${GREEN}System : All aliases have been added and are now available.${RESET}"
 }
 
 # Parse Flags Function
 parse_flags() {
     while [[ $# -gt 0 ]]; do
         case $1 in
-            --setup-device)
+            --setup)
                 setup_device
                 exit 0
                 ;;
-            --patch-system)
+            --patch)
                 system_patch
                 exit 0
                 ;;
@@ -224,8 +315,16 @@ parse_flags() {
                 install_kubernetes
                 exit 0
                 ;;
-            --install-base-packages)
+            --install-base)
                 install_base_package
+                exit 0
+                ;;
+            --install-extra)
+                install_extra_packages
+                exit 0
+                ;;
+            --install-jenkins)
+                install_jenkins_service
                 exit 0
                 ;;
             --set-alias)
@@ -269,6 +368,8 @@ main() {
         "Install Required Base Packages"
         "Install Docker Engine"
         "Install Kubernetes"
+        "Setup Jenkins Server"
+        "Install Additional Packages Added by User [.deb]"
         "Set Aliases"
         "Set up the System"
     )
@@ -281,8 +382,10 @@ main() {
             2) install_base_package ; break ;;
             3) install_docker_desktop ; break ;;
             4) install_kubernetes ; break ;;
-            5) add_aliases ; break ;;
-            6) setup_device ; break ;;  # Corrected typo here
+            5) install_jenkins_service ; break ;;
+            6) install_extra_packages ; break ;; 
+            7) add_aliases ; break ;; 
+            8) setup_device ; break ;; 
             *) echo "Invalid choice. Try again." ;;
         esac
     done
