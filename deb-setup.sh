@@ -38,6 +38,7 @@ install_base_package() {
     "glances" 
     "eza" 
     "bat"
+    #"gnome-tweaks"
     "gnome-shell-extensions"
     "github-desktop"
     )

@@ -21,17 +21,17 @@ pipeline {
                 label 'docker-ubuntu'
             }
             steps {
-                
                 script {
                     echo 'Cloning the GitHub Repository.'
                     sh '''
                         git clone https://github.com/aniketrath/scripts.git
                         cd scripts
+                        echo "Switching to the test branch"
+                        git checkout test
                         echo "Executing Script"
                         ./deb-setup.sh --setup
                     '''
                 }
-                
             }
         }
         stage('Cleaning up the Container') {
