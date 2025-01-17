@@ -28,6 +28,12 @@ pipeline {
                         cd scripts
                         echo "Switching to the test branch"
                         git checkout test
+
+                        # Use sed to comment out the install of gnome-tweaks and extensions
+                        sed -i 's/^.*gnome-tweaks.*$/# &/' deb-setup.sh
+                        sed -i 's/^.*gnome-shell-extensions.*$/# &/' deb-setup.sh
+                        sed -i 's/^.*github-desktop.*$/# &/' deb-setup.sh
+
                         echo "Executing Script"
                         ./deb-setup.sh --setup
                     '''
