@@ -35,11 +35,7 @@ pipeline {
                         sed -i 's/^.*github-desktop.*$/# &/' deb-setup.sh
 
                         echo "Executing Script"
-                        ./deb-setup.sh --patch
-                        ./deb-setup.sh --install-docker
-                        ./deb-setup.sh --install-kubernetes
-                        ./deb-setup.sh --install-base
-                        ./deb-setup.sh --install-jenkins
+                        ./deb-setup.sh --patch --install-base --install-docker --install-jenkins --install-kubernetes
                     '''
                 }
             }
