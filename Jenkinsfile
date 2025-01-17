@@ -21,14 +21,21 @@ pipeline {
                 label 'docker-ubuntu'
             }
             steps {
-                script {
-                    echo 'Cloning the GitHub Repository.'
-                    sh '''
-                        git clone https://github.com/aniketrath/scripts.git
-                        cd scripts
-                        echo "Executing Script"
-                        ./deb-setup.sh --setup
-                    '''
+                // Wrap in color support
+                ansiColor('gnome-terminal') {
+                    script {
+                        echo 'Cloning the GitHub Repository.'
+                        sh '''
+                            git clone https://github.com/aniketrath/scripts.git
+                            cd scripts
+                            echo "Executing Script"
+                            ./deb-setup.sh --patch
+                            ./deb-setup.sh --install-base
+                            ./deb-setup.sh --install-jenkins
+                            ./deb-setup.sh --install-docker
+                            ./deb-setup.sh --install-kubernetes
+                        '''
+                    }
                 }
             }
         }
