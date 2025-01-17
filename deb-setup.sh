@@ -38,7 +38,7 @@ install_base_package() {
     "glances" 
     "eza" 
     "bat"
-    "gnome-tweaks"
+    #"gnome-tweaks"
     "gnome-shell-extensions"
     "github-desktop"
     )
@@ -56,7 +56,7 @@ install_base_package() {
 
     for package in "${packages[@]}"; do
         echo -e "${YELLOW}System : Installing ${package}${RESET}"
-        apt-get install -y "${package}" 
+        apt-get install -y "${package}" &> /dev/null
         echo -e "${GREEN}System : ${package} Installed${RESET}"
     done
     echo -e "\n${GREEN}System : All Packages Installed Successfully${RESET}\n"
