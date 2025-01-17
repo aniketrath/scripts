@@ -301,35 +301,27 @@ parse_flags() {
         case $1 in
             --setup)
                 setup_device
-                exit 0
                 ;;
             --patch)
                 system_patch
-                exit 0
                 ;;
             --install-docker)
                 install_docker_desktop
-                exit 0
                 ;;
             --install-kubernetes)
                 install_kubernetes
-                exit 0
                 ;;
             --install-base)
                 install_base_package
-                exit 0
                 ;;
             --install-extra)
                 install_extra_packages
-                exit 0
                 ;;
             --install-jenkins)
                 install_jenkins_service
-                exit 0
                 ;;
             --set-alias)
                 add_aliases
-                exit 0
                 ;;
             --help|-h)
                 echo "Usage: $0 [OPTIONS]"
