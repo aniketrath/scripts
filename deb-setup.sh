@@ -170,6 +170,9 @@ install_docker_desktop() {
     tee /etc/apt/sources.list.d/docker.list > /dev/null
     apt-get update -y &> /dev/null
 
+    # install and setup dockerd to allow the docker.sock
+    apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin &> /dev/null
+
     # Define URL and output file
     local url="https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-linux-amd64"
     local deb_file="docker-desktop-amd64.deb"
@@ -253,13 +256,22 @@ setup_device() {
 
 #Setting up aliases
 add_aliases() {
-
     local shell_rc
+    local user_home
+
+    # Get the home directory of the user who invoked sudo
+    if [[ -n "$SUDO_USER" ]]; then
+        user_home=$(eval echo ~$SUDO_USER)
+    else
+        # If not running with sudo, fall back to the current user's home directory
+        user_home="$HOME"
+    fi
+
     # Detect whether the user is using bash or zsh
     if [[ -n "$ZSH_VERSION" ]]; then
-        shell_rc="$HOME/.zshrc"
+        shell_rc="$user_home/.zshrc"
     else
-        shell_rc="$HOME/.bashrc"
+        shell_rc="$user_home/.bashrc"
     fi
 
     echo -e "${YELLOW}System : Adding aliases to $shell_rc${RESET}"
@@ -294,6 +306,7 @@ add_aliases() {
 
     echo -e "${GREEN}System : All aliases have been added and are now available.${RESET}"
 }
+
 
 # Parse Flags Function
 parse_flags() {
