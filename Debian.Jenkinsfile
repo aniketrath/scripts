@@ -1,7 +1,7 @@
 pipeline {
     agent none
     stages {
-        stage('Run Commands on Host > Start') {
+        stage('Host > Start Container-00') {
             agent {
                 label 'host-device'
             }
@@ -16,7 +16,7 @@ pipeline {
                 }
             }
         }
-        stage('Run Commands on Docker-Ubuntu > New Host Check') {
+        stage('Docker-Ubuntu > New Host Check') {
             agent {
                 label 'docker-ubuntu'
             }
@@ -28,6 +28,8 @@ pipeline {
                         cd scripts
                         echo "Switching to the test branch"
                         git checkout test
+                        echo "Working on Debian Setup"
+                        cd Debian-Setup
 
                         # Use sed to comment out the install of gnome-tweaks and extensions
                         sed -i 's/^.*gnome-tweaks.*$/# &/' deb-setup.sh
@@ -40,7 +42,7 @@ pipeline {
                 }
             }
         }
-        stage('Cleanup > Setup CleanUp') {
+        stage('Cleanup > Container CleanUp') {
             agent {
                 label 'host-device'
             }
@@ -54,7 +56,7 @@ pipeline {
                 }
             }
         }
-        stage('Run Commands on Host > Flags') {
+        stage('Host > Flags Checks') {
             agent {
                 label 'host-device'
             }
@@ -69,7 +71,7 @@ pipeline {
                 }
             }
         }
-        stage('Run Commands on Docker-Ubuntu > Flag Check') {
+        stage('Docker-Ubuntu > Flag Check') {
             agent {
                 label 'docker-ubuntu'
             }
@@ -81,6 +83,8 @@ pipeline {
                         cd scripts
                         echo "Switching to the test branch"
                         git checkout test
+                        echo "Working on Debian Setup"
+                        cd Debian-Setup
 
                         # Use sed to comment out the install of gnome-tweaks and extensions
                         sed -i 's/^.*gnome-tweaks.*$/# &/' deb-setup.sh
@@ -93,7 +97,7 @@ pipeline {
                 }
             }
         }
-        stage('Cleanup > Closing') {
+        stage('Cleanup > Post Completion Cleanup') {
             agent {
                 label 'host-device'
             }

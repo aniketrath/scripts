@@ -16,6 +16,6 @@ cp "$CONFIG_FILE" "$BACKUP_FILE"
 
 # Copy the current configuration file to /etc/nixos/configuration.nix
 echo "Copying the current configuration file to $CONFIG_FILE..."
-cp /home/sh0r3s/Projects/Github/scripts/configuration.nix "$CONFIG_FILE"
+cp ./configuration.nix "$CONFIG_FILE"
 
 echo "Operation completed."
