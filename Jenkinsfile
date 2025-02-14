@@ -1,7 +1,7 @@
 pipeline {
     agent none
     stages {
-        stage('Run Commands on Host') {
+        stage('Run Commands on Host > Start') {
             agent {
                 label 'host-device'
             }
@@ -16,7 +16,7 @@ pipeline {
                 }
             }
         }
-        stage('Run Commands on Docker-Ubuntu') {
+        stage('Run Commands on Docker-Ubuntu > New Host Check') {
             agent {
                 label 'docker-ubuntu'
             }
@@ -40,7 +40,7 @@ pipeline {
                 }
             }
         }
-        stage('Cleanup') {
+        stage('Cleanup > Setup CleanUp') {
             agent {
                 label 'host-device'
             }
@@ -54,7 +54,7 @@ pipeline {
                 }
             }
         }
-        stage('Run Commands on Host') {
+        stage('Run Commands on Host > Flags') {
             agent {
                 label 'host-device'
             }
@@ -69,7 +69,7 @@ pipeline {
                 }
             }
         }
-        stage('Run Commands on Docker-Ubuntu') {
+        stage('Run Commands on Docker-Ubuntu > Flag Check') {
             agent {
                 label 'docker-ubuntu'
             }
@@ -93,7 +93,7 @@ pipeline {
                 }
             }
         }
-        stage('Cleanup') {
+        stage('Cleanup > Closing') {
             agent {
                 label 'host-device'
             }
