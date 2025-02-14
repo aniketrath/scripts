@@ -8,8 +8,8 @@
     ];
   # Enable experimental features
   nix.settings.experimental-features = [
-    "nix-command" 
-    "flakes"   
+    "nix-command"
+    "flakes"
   ];
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -60,7 +60,7 @@
     #media-session.enable = true;
   };
   # services.xserver.libinput.enable = true; # touchpad support
-  users.users.sh0r3s = {
+  users.users.arath = {
     isNormalUser = true;
     description = "Aniket Rath";
     extraGroups = [ "networkmanager" "wheel" "video" "audio"];
@@ -69,7 +69,7 @@
       eza
       bat
       fzf
-      zoxide  
+      zoxide
       github-desktop
       vscode
     ];
@@ -78,7 +78,7 @@
   programs.firefox.enable = true;
   services.jenkins = {
     enable = true;
-    extraGroups = [ "podman" ]; 
+    # extraGroups = [ "podman" ];
   };
   programs.zsh = {
     enable = true;
@@ -134,14 +134,9 @@
   };
 };
   # Virtualisation services :
-  virtualisation.containers.enable = true;
-  virtualisation = {
-    podman = {
-      enable = true;
-      dockerCompat = true; # Docker-replacement
-      defaultNetwork.settings.dns_enabled = true;
-    };
-  };
+  virtualisation.docker.enable = true;
+  users.extraGroups.docker.members = [ "jenkins" "arath" ];
+  hardware.nvidia-container-toolkit.enable = true;
   # List services that you want to enable:
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
