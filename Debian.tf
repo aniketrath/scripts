@@ -13,7 +13,8 @@ resource "docker_image" "jenkins_agent" {
   name         = "jenkins-agent:latest"
   keep_locally = false
   build {
-    context    = "./Docker"                   # The directory containing the Dockerfile
-    dockerfile = "./Docker/Debian.Dockerfile" # Path to the Dockerfile
+    context    = "${path.module}/Docker"                   # Use the path to the Docker directory
+    dockerfile = "${path.module}/Docker/Debian.Dockerfile" # Use the path to the Dockerfile
+    remove     = true
   }
 }
