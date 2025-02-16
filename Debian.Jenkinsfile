@@ -102,21 +102,5 @@ pipeline {
                 }
             }
         }
-
-
-        stage('Cleanup > Destroy Resources') {
-            agent {
-                label 'host-device'  // Run cleanup on the host machine
-            }
-            steps {
-                script {
-                    echo 'Destroying Terraform resources'
-                    sh '''
-                        terraform destroy -auto-approve  # Clean up Terraform-managed resources (the image)
-                    '''
-                    echo 'Cleanup Complete'
-                }
-            }
-        }
     }
 }
