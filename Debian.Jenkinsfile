@@ -1,5 +1,6 @@
 pipeline {
-    agent none
+    agent none  // No global agent, we will define agents for each stage
+
     stages {
         stage('Setup > Terraform Init') {
             agent {
@@ -9,6 +10,7 @@ pipeline {
                 script {
                     echo 'Setting up Terraform environment'
                     sh 'pwd'  // Debugging step to print current directory
+                    sh 'ls -l ./Docker'  // Check if the Docker folder is present
                     sh 'terraform init'  // Initialize Terraform
                 }
             }
@@ -21,6 +23,8 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image using Terraform'
+                    // Check if the Dockerfile exists before applying
+                    sh 'ls -l ./Docker/Debian.Dockerfile'
                     sh '''
                         terraform apply -auto-approve
                     '''  // Terraform apply to build the Docker image
@@ -29,7 +33,6 @@ pipeline {
         }
 
         stage('Run Tests in Parallel') {
-            agent none  // Parallel stages won't require the global agent
             parallel {
                 stage('Run Tests Container 00') {
                     agent {
@@ -82,14 +85,15 @@ pipeline {
 
         stage('Cleanup > Destroy Resources') {
             agent {
-                label 'host-device'  // Cleanup stage on the host
+                label 'host-device'  // Run cleanup on the host machine
             }
             steps {
                 script {
-                    echo 'Cleaning up Terraform resources'
+                    echo 'Destroying Terraform resources'
                     sh '''
-                        terraform destroy -auto-approve  # Destroy the Terraform-managed resources
+                        terraform destroy -auto-approve  # Clean up Terraform-managed resources (the image)
                     '''
+                    echo 'Cleanup Complete'
                 }
             }
         }
