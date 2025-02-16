@@ -1,9 +1,11 @@
 pipeline {
-    agent none
+    agent none  // No global agent, we define agents for each stage
+
     stages {
+        // Stage to apply terraform and build Docker image
         stage('Build Image with Terraform') {
             agent {
-                label 'host-device'
+                label 'host-device'  // The agent that will run the Terraform code (on the host device)
             }
             steps {
                 script {
@@ -16,12 +18,13 @@ pipeline {
             }
         }
 
+        // Stage to run tests in parallel
         stage('Run Tests in Parallel') {
-            agent {
-                label 'docker-ubuntu'
-            }
             parallel {
                 stage('Test 1 > New Host Check') {
+                    agent {
+                        label 'docker-ubuntu'  // The cloud agent (Docker host) for this parallel job
+                    }
                     steps {
                         script {
                             echo 'Running tests in Container 00 (New Host Check)'
@@ -38,7 +41,11 @@ pipeline {
                         }
                     }
                 }
+
                 stage('Test 2 > Flags Check') {
+                    agent {
+                        label 'docker-ubuntu'  // The cloud agent (Docker host) for this parallel job
+                    }
                     steps {
                         script {
                             echo 'Running tests in Container 01 (Flags Check)'
@@ -61,13 +68,13 @@ pipeline {
         // Stage to destroy resources with Terraform (e.g., remove the Docker image)
         stage('Cleanup > Terraform Destroy') {
             agent {
-                label 'host-device'
+                label 'host-device'  // Run cleanup on the host device
             }
             steps {
                 script {
                     echo 'Cleaning up resources with Terraform...'
                     sh '''
-                        terraform destroy -auto-approve
+                        terraform destroy -auto-approve  # Destroy Terraform-managed resources (the image)
                     '''
                 }
             }
