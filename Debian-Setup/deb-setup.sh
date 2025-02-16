@@ -31,12 +31,12 @@ ascii_animate() {
 # Install base packages
 install_base_package() {
     local packages=(
-    "wget" 
-    "curl" 
-    "git" 
-    "vim" 
-    "glances" 
-    "eza" 
+    "wget"
+    "curl"
+    "git"
+    "vim"
+    "glances"
+    "eza"
     "bat"
     "gnome-tweaks"
     "gnome-shell-extensions"
@@ -68,8 +68,8 @@ install_extra_packages() {
 
     # Declare the associative array within the function
     declare -A list=(
-        ["warp"]="https://app.warp.dev/download?package=deb"  
-        ["vs-code"]="https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"  
+        ["warp"]="https://app.warp.dev/download?package=deb"
+        ["vs-code"]="https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"
     )
 
     for package in "${!list[@]}"; do
@@ -150,7 +150,7 @@ system_patch() {
 # Docker installation
 install_docker_desktop() {
     echo -e "${YELLOW}System : Setting up Docker: Desktop ${RESET}"
-    
+
     # Install required tools
     echo -e "${YELLOW}System : Installing prerequisites ${RESET}"
     apt-get update -y &> /dev/null
@@ -241,7 +241,7 @@ install_kubernetes() {
     echo -e "${GREEN}System : Kubernetes (kubectl) Installed Successfully!${RESET}"
 }
 
-# New Device Setup : All installs 
+# New Device Setup : All installs
 setup_device() {
     echo -e "${BLUE}System : Setting Up as a New Device ${RESET}\n"
     echo -e "${BLUE}System : All the packages and tools offered in this script will be installed. ${RESET}\n"
@@ -360,13 +360,15 @@ parse_flags() {
 
 # Main Function
 main() {
-    animated_text_dependencies
-    ascii_animate "H E L L O"
 
     if [[ $# -gt 0 ]]; then
         parse_flags "$@"
         exit 0
     fi
+
+    animated_text_dependencies
+    ascii_animate "H E L L O"
+
 
     local OPTIONS=(
         "Patch the System [ Update all the packages ]"
@@ -388,9 +390,9 @@ main() {
             3) install_docker_desktop ; break ;;
             4) install_kubernetes ; break ;;
             5) install_jenkins_service ; break ;;
-            6) install_extra_packages ; break ;; 
-            7) add_aliases ; break ;; 
-            8) setup_device ; break ;; 
+            6) install_extra_packages ; break ;;
+            7) add_aliases ; break ;;
+            8) setup_device ; break ;;
             *) echo "Invalid choice. Try again." ;;
         esac
     done

@@ -1,113 +1,74 @@
 pipeline {
     agent none
     stages {
-        stage('Host > Start Container-00') {
+        stage('Build Image with Terraform') {
             agent {
                 label 'host-device'
             }
             steps {
                 script {
-                    echo 'Jenkins Host: Spinning up a container'
+                    echo 'Building Docker image using Terraform...'
                     sh '''
-                        docker run -d --rm -p 2000:22 \
-                        --name Jenkins-Agent-Ubuntu \
-                        jenkins-agent
+                        terraform init
+                        terraform apply -auto-approve  # Apply the Terraform plan to build the Docker image
                     '''
                 }
             }
         }
-        stage('Docker-Ubuntu > New Host Check') {
+
+        stage('Run Tests in Parallel') {
             agent {
                 label 'docker-ubuntu'
             }
-            steps {
-                script {
-                    echo 'Cloning the GitHub Repository.'
-                    sh '''
-                        git clone https://github.com/aniketrath/scripts.git
-                        cd scripts
-                        echo "Switching to the test branch"
-                        git checkout test
-                        echo "Working on Debian Setup"
-                        cd Debian-Setup
-
-                        # Use sed to comment out the install of gnome-tweaks and extensions
-                        sed -i 's/^.*gnome-tweaks.*$/# &/' deb-setup.sh
-                        sed -i 's/^.*gnome-shell-extensions.*$/# &/' deb-setup.sh
-                        sed -i 's/^.*github-desktop.*$/# &/' deb-setup.sh
-
-                        echo "Executing Script"
-                        ./deb-setup.sh --setup
-                    '''
+            parallel {
+                stage('Test 1 > New Host Check') {
+                    steps {
+                        script {
+                            echo 'Running tests in Container 00 (New Host Check)'
+                            sh '''
+                                git clone https://github.com/aniketrath/scripts.git
+                                cd scripts
+                                git checkout test
+                                cd Debian-Setup
+                                sed -i 's/^.*gnome-tweaks.*$/# &/' deb-setup.sh
+                                sed -i 's/^.*gnome-shell-extensions.*$/# &/' deb-setup.sh
+                                sed -i 's/^.*github-desktop.*$/# &/' deb-setup.sh
+                                ./deb-setup.sh --setup
+                            '''
+                        }
+                    }
+                }
+                stage('Test 2 > Flags Check') {
+                    steps {
+                        script {
+                            echo 'Running tests in Container 01 (Flags Check)'
+                            sh '''
+                                git clone https://github.com/aniketrath/scripts.git
+                                cd scripts
+                                git checkout test
+                                cd Debian-Setup
+                                sed -i 's/^.*gnome-tweaks.*$/# &/' deb-setup.sh
+                                sed -i 's/^.*gnome-shell-extensions.*$/# &/' deb-setup.sh
+                                sed -i 's/^.*github-desktop.*$/# &/' deb-setup.sh
+                                ./deb-setup.sh --patch --install-docker --install-kubernetes --install-jenkins --set-alias --install-extra
+                            '''
+                        }
+                    }
                 }
             }
         }
-        stage('Cleanup > Container CleanUp') {
+
+        // Stage to destroy resources with Terraform (e.g., remove the Docker image)
+        stage('Cleanup > Terraform Destroy') {
             agent {
                 label 'host-device'
             }
             steps {
                 script {
-                    echo 'Initiating cleanup'
+                    echo 'Cleaning up resources with Terraform...'
                     sh '''
-                        docker stop Jenkins-Agent-Ubuntu || echo "Container already stopped."
+                        terraform destroy -auto-approve
                     '''
-                    echo 'Cleanup Complete'
-                }
-            }
-        }
-        stage('Host > Flags Checks') {
-            agent {
-                label 'host-device'
-            }
-            steps {
-                script {
-                    echo 'Jenkins Host: Spinning up a container'
-                    sh '''
-                        docker run -d --rm -p 2000:22 \
-                        --name Jenkins-Agent-Ubuntu \
-                        jenkins-agent
-                    '''
-                }
-            }
-        }
-        stage('Docker-Ubuntu > Flag Check') {
-            agent {
-                label 'docker-ubuntu'
-            }
-            steps {
-                script {
-                    echo 'Cloning the GitHub Repository.'
-                    sh '''
-                        git clone https://github.com/aniketrath/scripts.git
-                        cd scripts
-                        echo "Switching to the test branch"
-                        git checkout test
-                        echo "Working on Debian Setup"
-                        cd Debian-Setup
-
-                        # Use sed to comment out the install of gnome-tweaks and extensions
-                        sed -i 's/^.*gnome-tweaks.*$/# &/' deb-setup.sh
-                        sed -i 's/^.*gnome-shell-extensions.*$/# &/' deb-setup.sh
-                        sed -i 's/^.*github-desktop.*$/# &/' deb-setup.sh
-
-                        echo "Executing Script"
-                        ./deb-setup.sh --patch --install-docker --install-kubernetes --install-jenkins --set-alias --install-extra
-                    '''
-                }
-            }
-        }
-        stage('Cleanup > Post Completion Cleanup') {
-            agent {
-                label 'host-device'
-            }
-            steps {
-                script {
-                    echo 'Initiating cleanup'
-                    sh '''
-                        docker stop Jenkins-Agent-Ubuntu || echo "Container already stopped."
-                    '''
-                    echo 'Cleanup Complete'
                 }
             }
         }
