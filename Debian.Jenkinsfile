@@ -1,62 +1,77 @@
 pipeline {
-    agent none  // No global agent, we define agents for each stage
-
+    agent none
     stages {
-        // Stage to apply terraform and build Docker image
-        stage('Build Image with Terraform') {
+        stage('Setup > Terraform Init') {
             agent {
-                label 'host-device'  // The agent that will run the Terraform code (on the host device)
+                label 'host-device'  // Assuming this is a host-based agent
             }
             steps {
                 script {
-                    echo 'Building Docker image using Terraform...'
-                    sh '''
-                        terraform init
-                        terraform apply -auto-approve  # Apply the Terraform plan to build the Docker image
-                    '''
+                    echo 'Setting up Terraform environment'
+                    sh 'pwd'  // Debugging step to print current directory
+                    sh 'terraform init'  // Initialize Terraform
                 }
             }
         }
 
-        // Stage to run tests in parallel
+        stage('Build Docker Image with Terraform') {
+            agent {
+                label 'host-device'  // Run Terraform on the host machine
+            }
+            steps {
+                script {
+                    echo 'Building Docker image using Terraform'
+                    sh '''
+                        terraform apply -auto-approve
+                    '''  // Terraform apply to build the Docker image
+                }
+            }
+        }
+
         stage('Run Tests in Parallel') {
+            agent none  // Parallel stages won't require the global agent
             parallel {
-                stage('Test 1 > New Host Check') {
+                stage('Run Tests Container 00') {
                     agent {
-                        label 'docker-ubuntu'  // The cloud agent (Docker host) for this parallel job
+                        label 'docker-ubuntu'  // Use the docker-ubuntu cloud agent for this stage
                     }
                     steps {
                         script {
-                            echo 'Running tests in Container 00 (New Host Check)'
+                            echo 'Running tests in Container 00'
                             sh '''
+                                # Run test scripts inside Docker container
                                 git clone https://github.com/aniketrath/scripts.git
                                 cd scripts
                                 git checkout test
                                 cd Debian-Setup
+
                                 sed -i 's/^.*gnome-tweaks.*$/# &/' deb-setup.sh
                                 sed -i 's/^.*gnome-shell-extensions.*$/# &/' deb-setup.sh
                                 sed -i 's/^.*github-desktop.*$/# &/' deb-setup.sh
+
                                 ./deb-setup.sh --setup
                             '''
                         }
                     }
                 }
-
-                stage('Test 2 > Flags Check') {
+                stage('Run Tests Container 01') {
                     agent {
-                        label 'docker-ubuntu'  // The cloud agent (Docker host) for this parallel job
+                        label 'docker-ubuntu'  // Use the docker-ubuntu cloud agent for this stage
                     }
                     steps {
                         script {
-                            echo 'Running tests in Container 01 (Flags Check)'
+                            echo 'Running tests in Container 01'
                             sh '''
+                                # Run test scripts inside Docker container
                                 git clone https://github.com/aniketrath/scripts.git
                                 cd scripts
                                 git checkout test
                                 cd Debian-Setup
+
                                 sed -i 's/^.*gnome-tweaks.*$/# &/' deb-setup.sh
                                 sed -i 's/^.*gnome-shell-extensions.*$/# &/' deb-setup.sh
                                 sed -i 's/^.*github-desktop.*$/# &/' deb-setup.sh
+
                                 ./deb-setup.sh --patch --install-docker --install-kubernetes --install-jenkins --set-alias --install-extra
                             '''
                         }
@@ -65,16 +80,15 @@ pipeline {
             }
         }
 
-        // Stage to destroy resources with Terraform (e.g., remove the Docker image)
-        stage('Cleanup > Terraform Destroy') {
+        stage('Cleanup > Destroy Resources') {
             agent {
-                label 'host-device'  // Run cleanup on the host device
+                label 'host-device'  // Cleanup stage on the host
             }
             steps {
                 script {
-                    echo 'Cleaning up resources with Terraform...'
+                    echo 'Cleaning up Terraform resources'
                     sh '''
-                        terraform destroy -auto-approve  # Destroy Terraform-managed resources (the image)
+                        terraform destroy -auto-approve  # Destroy the Terraform-managed resources
                     '''
                 }
             }
