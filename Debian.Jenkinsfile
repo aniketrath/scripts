@@ -79,6 +79,30 @@ pipeline {
                 }
             }
         }
+        stage('Cleanup > Wait Before Destroying Image') {
+            agent {
+                label 'host-device'  // Run cleanup on the host machine
+            }
+            steps {
+                echo "Waiting for 5 seconds before destroying the Docker image..."
+                sleep(time: 5, unit: 'SECONDS')
+            }
+        }
+        stage('Cleanup > Destroy Resources') {
+            agent {
+                label 'host-device'  // Run cleanup on the host machine
+            }
+            steps {
+                script {
+                    echo 'Destroying Terraform resources'
+                    sh '''
+                        terraform destroy -auto-approve  # Clean up Terraform-managed resources (the image)
+                    '''
+                    echo 'Cleanup Complete'
+                }
+            }
+        }
+
 
         stage('Cleanup > Destroy Resources') {
             agent {
