@@ -10,7 +10,6 @@ pipeline {
                 script {
                     echo 'Setting up Terraform environment'
                     sh 'pwd'  // Debugging step to print current directory
-                    sh 'ls -l ./Docker'  // Check if the Docker folder is present
                     sh 'terraform init'  // Initialize Terraform
                 }
             }
@@ -23,8 +22,6 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image using Terraform'
-                    // Check if the Dockerfile exists before applying
-                    sh 'ls -l ./Docker/Debian.Dockerfile'
                     sh '''
                         terraform apply -auto-approve
                     '''  // Terraform apply to build the Docker image

@@ -8,13 +8,12 @@ terraform {
 }
 
 provider "docker" {}
-# Build the Docker image from the Dockerfile
+
 resource "docker_image" "jenkins_agent" {
-  name         = "jenkins-agent:latest"
-  keep_locally = false
+  name = "jenkins-agent:latest"
   build {
-    context    = "${path.module}/Docker"                   # Use the path to the Docker directory
-    dockerfile = "${path.module}/Docker/Debian.Dockerfile" # Use the path to the Dockerfile
-    remove     = true
+    context    = "./"           # The root directory where Dockerfile is located
+    dockerfile = "./Dockerfile" # Path to the Dockerfile at the root
   }
+  keep_locally = false
 }
