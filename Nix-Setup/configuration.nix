@@ -8,8 +8,8 @@
     ];
   # Enable experimental features
   nix.settings.experimental-features = [
-    "nix-command" 
-    "flakes"   
+    "nix-command"
+    "flakes"
   ];
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -35,7 +35,9 @@
     LC_TELEPHONE = "en_IN";
     LC_TIME = "en_IN";
   };
-
+  networking.hosts = {
+    "127.0.0.1" = [ "host.jenkins.internal" ];
+  };
   # Desktop Environment
   services.xserver.enable = true;
   services.xserver.displayManager.gdm.enable = true;
@@ -60,21 +62,47 @@
   # services.xserver.libinput.enable = true; # touchpad support
   users.users.arath = {
     isNormalUser = true;
-    description = "Aniket";
+    description = "Aniket Rath";
     extraGroups = [ "networkmanager" "wheel" "video" "audio"];
+    shell = pkgs.zsh;
     packages = with pkgs; [
       eza
       bat
       fzf
-      zoxide  
+      zoxide
       github-desktop
       vscode
     ];
   };
   # Packages
-  programs.zsh.enable = true;
   programs.firefox.enable = true;
-  services.jenkins.enable = true;
+  services.jenkins = {
+    enable = true;
+    # extraGroups = [ "podman" ];
+  };
+  programs.zsh = {
+    enable = true;
+    enableCompletion = true;
+    autosuggestions.enable = true;
+    syntaxHighlighting.enable = true;
+
+    ohMyZsh = {
+      enable = true;
+      plugins = [ "git" "thefuck" ];
+      theme = "darkblood";
+    };
+
+    shellAliases = {
+      ll = "eza -lh";
+      lh = "eza -alh";
+      ls = "eza";
+      c = "clear";
+      e = "exit";
+      update = "sudo nixos-rebuild switch";
+    };
+    histSize = 10000;
+  };
+
   nixpkgs.config.allowUnfree = true;
   environment.systemPackages = with pkgs; [
     vim
@@ -86,6 +114,7 @@
     dive
     podman-tui
     podman-compose
+    udev-gothic-nf
   ];
   # started in user sessions.
   programs.mtr.enable = true;
@@ -98,21 +127,16 @@
   ports = [ 22 ];
   settings = {
     PasswordAuthentication = true;
-    AllowUsers = [ "arath" ];
+    AllowUsers = [ "sh0r3s" ];
     UseDns = true;
     X11Forwarding = false;
     PermitRootLogin = "yes";
   };
 };
   # Virtualisation services :
-  virtualisation.containers.enable = true;
-  virtualisation = {
-    podman = {
-      enable = true;
-      dockerCompat = true; # Docker-replacement
-      defaultNetwork.settings.dns_enabled = true;
-    };
-  };
+  virtualisation.docker.enable = true;
+  users.extraGroups.docker.members = [ "jenkins" "arath" ];
+  hardware.nvidia-container-toolkit.enable = true;
   # List services that you want to enable:
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
